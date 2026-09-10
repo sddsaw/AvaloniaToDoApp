@@ -16,12 +16,45 @@ public enum TodoFilter
     Completed
 }
 
+public enum NavModule
+{
+    ChipInspect, // 3D 芯片检测与上位机看板
+    Todo,        // 待办任务工单
+    Logs         // 工业设备日志
+}
+
 /// <summary>
 /// 主界面 ViewModel (类似 Vue 的 App.vue <script setup> 或 React 的主组件 Hook)
 /// 负责数据管理、响应式状态以及事件处理命令 (Commands)
 /// </summary>
 public partial class MainWindowViewModel : ViewModelBase
 {
+    // 侧边栏导航当前激活模块
+    [ObservableProperty]
+    private NavModule _currentModule = NavModule.ChipInspect;
+
+    public bool IsModuleChipInspect => CurrentModule == NavModule.ChipInspect;
+    public bool IsModuleTodo => CurrentModule == NavModule.Todo;
+    public bool IsModuleLogs => CurrentModule == NavModule.Logs;
+
+    [RelayCommand]
+    private void SwitchModule(string moduleName)
+    {
+        if (Enum.TryParse<NavModule>(moduleName, true, out var mod))
+        {
+            CurrentModule = mod;
+            OnPropertyChanged(nameof(IsModuleChipInspect));
+            OnPropertyChanged(nameof(IsModuleTodo));
+            OnPropertyChanged(nameof(IsModuleLogs));
+            Serilog.Log.Information("[Navigation] 切换主视图模块: {Module}", mod);
+        }
+    }
+
+    [RelayCommand]
+    private void OpenLogFolder()
+    {
+        LogHelper.OpenLogFolder();
+    }
     // 所有任务的原始数据源
     private readonly List<TodoItemViewModel> _allTasks = new();
 

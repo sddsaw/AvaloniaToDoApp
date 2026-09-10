@@ -1,0 +1,1270 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>芯片检测全业务与上位机 3D 数据看板平台 (Three.js 终极版)</title>
+  <!-- Three.js 核心库与 OrbitControls (CDN 加载，开箱即用) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+    }
+    body {
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      background-color: #070a12;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      color: #e2e8f0;
+    }
+    #canvas-container {
+      width: 100%;
+      height: 100%;
+      position: absolute;
+      top: 0;
+      left: 0;
+      z-index: 1;
+    }
+    .panel-glass {
+      background: rgba(13, 17, 28, 0.90);
+      backdrop-filter: blur(14px);
+      border: 1px solid rgba(56, 189, 248, 0.25);
+    }
+    .color-legend {
+      background: linear-gradient(to top, #0000ff, #00ffff, #00ff00, #ffff00, #ff0000);
+    }
+
+    /* 3D 空间映射的 2D 悬浮打标旗帜 */
+    .flag-marker {
+      position: absolute;
+      transform: translate(-50%, -100%);
+      pointer-events: auto;
+      cursor: pointer;
+      display: flex;
+      align-items: flex-start;
+      gap: 4px;
+      transition: transform 0.15s ease-out, filter 0.2s ease;
+      z-index: 15;
+    }
+    .flag-marker:hover {
+      transform: translate(-50%, -105%) scale(1.08);
+      filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.5));
+      z-index: 30;
+    }
+    .flag-content {
+      background: rgba(15, 20, 28, 0.92);
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      backdrop-filter: blur(8px);
+      border-radius: 4px;
+      padding: 4px 8px;
+      font-size: 11px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
+      line-height: 1.35;
+      white-space: nowrap;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.6);
+      display: flex;
+      flex-direction: column;
+    }
+    .flag-content .flag-title {
+      font-weight: 700;
+      font-size: 11px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .flag-icon {
+      width: 8px;
+      height: 8px;
+      display: inline-block;
+      clip-path: polygon(0 0, 100% 50%, 0 100%);
+    }
+    .flag-pass { color: #4ade80; }
+    .flag-pass .flag-icon { background: #22c55e; }
+    .flag-fail { color: #f87171; }
+    .flag-fail .flag-icon { background: #ef4444; }
+    .flag-warn { color: #facc15; }
+    .flag-warn .flag-icon { background: #eab308; }
+    .flag-value { color: #cbd5e1; font-size: 10px; }
+
+    /* 悬浮光标 Tooltip */
+    #hover-tooltip {
+      position: absolute;
+      display: none;
+      background: rgba(0, 0, 0, 0.88);
+      border: 1px solid #38bdf8;
+      color: #f8fafc;
+      padding: 6px 10px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-family: ui-monospace, SFMono-Regular, monospace;
+      pointer-events: none;
+      z-index: 100;
+      box-shadow: 0 0 12px rgba(56, 189, 248, 0.4);
+      transform: translate(14px, -50%);
+    }
+
+    ::-webkit-scrollbar { width: 4px; height: 4px; }
+    ::-webkit-scrollbar-thumb { background: #334155; border-radius: 2px; }
+  </style>
+</head>
+<body class="select-none">
+
+  <!-- 3D WebGL 画布 -->
+  <div id="canvas-container"></div>
+
+  <!-- 顶部主导航栏 -->
+  <header class="absolute top-0 left-0 right-0 z-20 flex items-center justify-between px-5 py-2 panel-glass border-b border-cyan-900/40">
+    <div class="flex items-center space-x-3">
+      <div class="w-3 h-3 rounded-full bg-cyan-400 animate-pulse"></div>
+      <div>
+        <h1 class="text-sm font-bold tracking-wider text-slate-100 flex items-center gap-2">
+          <span>SEMI-INSPECT 3D PRO</span>
+          <span class="text-[10px] px-2 py-0.5 rounded bg-cyan-950 text-cyan-300 border border-cyan-700">全业务与上位机平台</span>
+        </h1>
+      </div>
+    </div>
+
+    <!-- 12 大场景水平滚动 Tab 栏 -->
+    <div class="flex items-center space-x-1 bg-slate-900/90 p-1 rounded-lg border border-slate-700 overflow-x-auto max-w-[65vw]">
+      <!-- 类别 1: 上位机控制与硬件测量 -->
+      <button onclick="switchScenario('focusMap')" id="btn-focusMap" class="scenario-btn whitespace-nowrap px-2.5 py-1.5 rounded text-xs font-medium transition-all bg-cyan-600 text-white shadow">
+        ⚡ 1. 探针台高度补偿 (Focus)
+      </button>
+      <button onclick="switchScenario('thermal3d')" id="btn-thermal3d" class="scenario-btn whitespace-nowrap px-2.5 py-1.5 rounded text-xs font-medium transition-all text-slate-400 hover:text-slate-200">
+        🔥 2. 红外热成像发热点 (IR)
+      </button>
+      <button onclick="switchScenario('eyeDiagram')" id="btn-eyeDiagram" class="scenario-btn whitespace-nowrap px-2.5 py-1.5 rounded text-xs font-medium transition-all text-slate-400 hover:text-slate-200">
+        📈 3. 高速信号 3D 眼图 (Eye)
+      </button>
+      <button onclick="switchScenario('motionRobot')" id="btn-motionRobot" class="scenario-btn whitespace-nowrap px-2.5 py-1.5 rounded text-xs font-medium transition-all text-slate-400 hover:text-slate-200">
+        🤖 4. 机械手运动防撞 (Robot)
+      </button>
+      <!-- 类别 2: 晶圆电学与表面形貌 -->
+      <button onclick="switchScenario('vfSurface')" id="btn-vfSurface" class="scenario-btn whitespace-nowrap px-2.5 py-1.5 rounded text-xs font-medium transition-all text-slate-400 hover:text-slate-200">
+        📊 5. V-F 响应曲面 & 打标
+      </button>
+      <button onclick="switchScenario('warpage')" id="btn-warpage" class="scenario-btn whitespace-nowrap px-2.5 py-1.5 rounded text-xs font-medium transition-all text-slate-400 hover:text-slate-200">
+        🌐 6. 晶圆翘曲形貌 (Warpage)
+      </button>
+      <button onclick="switchScenario('probeMark')" id="btn-probeMark" class="scenario-btn whitespace-nowrap px-2.5 py-1.5 rounded text-xs font-medium transition-all text-slate-400 hover:text-slate-200">
+        📍 7. 探针共面与针痕 (Probe)
+      </button>
+      <!-- 类别 3: 先进封装与缺陷检测 -->
+      <button onclick="switchScenario('stacking')" id="btn-stacking" class="scenario-btn whitespace-nowrap px-2.5 py-1.5 rounded text-xs font-medium transition-all text-slate-400 hover:text-slate-200">
+        📦 8. 3D IC 堆叠失效 (Chiplet)
+      </button>
+      <button onclick="switchScenario('void')" id="btn-void" class="scenario-btn whitespace-nowrap px-2.5 py-1.5 rounded text-xs font-medium transition-all text-slate-400 hover:text-slate-200">
+        🔬 9. 焊点空洞剖切 (Void)
+      </button>
+      <button onclick="switchScenario('stackedLot')" id="btn-stackedLot" class="scenario-btn whitespace-nowrap px-2.5 py-1.5 rounded text-xs font-medium transition-all text-slate-400 hover:text-slate-200">
+        📚 10. 批次穿透透视 (Lot Stack)
+      </button>
+      <button onclick="switchScenario('wireBond')" id="btn-wireBond" class="scenario-btn whitespace-nowrap px-2.5 py-1.5 rounded text-xs font-medium transition-all text-slate-400 hover:text-slate-200">
+        ⚡ 11. 引线键合短路 (Wire Bond)
+      </button>
+      <button onclick="switchScenario('fabTwin')" id="btn-fabTwin" class="scenario-btn whitespace-nowrap px-2.5 py-1.5 rounded text-xs font-medium transition-all text-slate-400 hover:text-slate-200">
+        🏭 12. 车间数字孪生 (Fab Twin)
+      </button>
+    </div>
+
+    <!-- 上位机硬件状态 -->
+    <div class="text-xs text-slate-400 flex items-center space-x-2 font-mono">
+      <span>PLC/上位机:</span>
+      <span class="text-emerald-400 font-bold">● RUNNING</span>
+    </div>
+  </header>
+
+  <!-- 左侧动态控制面板 -->
+  <aside class="absolute left-5 top-16 z-20 w-80 panel-glass rounded-xl p-4 text-xs space-y-3.5 shadow-2xl">
+    <div class="flex items-center justify-between border-b border-slate-700/60 pb-2">
+      <h2 id="panel-title" class="font-semibold text-sm text-cyan-300">场景控制与参数</h2>
+      <span id="panel-badge" class="px-1.5 py-0.5 text-[10px] rounded bg-cyan-900/80 text-cyan-300 border border-cyan-700">Live 3D</span>
+    </div>
+
+    <div id="dynamic-controls" class="space-y-3.5"></div>
+
+    <div class="bg-slate-900/85 rounded-lg p-3 border border-slate-800 space-y-1.5">
+      <div class="text-[11px] font-medium text-slate-400 flex items-center justify-between">
+        <span>实时遥测与量测 (Telemetry)</span>
+        <span class="text-[10px] text-cyan-400">实时计算</span>
+      </div>
+      <div id="dynamic-metrics" class="grid grid-cols-2 gap-2 pt-1 font-mono text-[11px]"></div>
+    </div>
+
+    <div class="text-[10px] text-slate-500 text-center">
+      🖱️ 鼠标左键旋转 | 右键平移 | 滚轮缩放
+    </div>
+  </aside>
+
+  <!-- 右下角彩虹热力色阶图例 -->
+  <div id="color-legend-box" class="absolute right-5 bottom-6 z-20 panel-glass rounded-lg p-3 text-[11px] flex items-center space-x-3" style="display:none;">
+    <div class="flex flex-col justify-between h-32 text-slate-400 font-mono text-[10px]">
+      <span id="legend-max">+65.2 μm</span>
+      <span id="legend-mid">0.0 μm</span>
+      <span id="legend-min">-58.4 μm</span>
+    </div>
+    <div class="w-3 h-32 rounded color-legend border border-slate-700"></div>
+    <div class="text-[10px] text-slate-400 flex flex-col justify-between h-32">
+      <span class="text-rose-400 font-semibold">Max (超差)</span>
+      <span class="text-emerald-400">Nominal (受控)</span>
+      <span class="text-indigo-400 font-semibold">Min (下限)</span>
+    </div>
+  </div>
+
+  <div id="hover-tooltip"></div>
+
+  <script>
+    let currentScenario = 'focusMap';
+    let scene, camera, renderer, controls;
+    let mainGroup = new THREE.Group();
+    let clock = new THREE.Clock();
+
+    let laserSensorMesh, thermalMesh, eyeMesh, robotGripper, safeZoneBox;
+    let vfMesh, vfWireframe, vfGridGroup, vfLabelGroup;
+    let flagMarkers = [], flagMarkerGroup = new THREE.Group(), addFlagMode = false;
+    let warpageMesh, warpageWireframe;
+    let stackingLayers = [], defectBumps = [];
+    let voidMeshGroup, clippingPlane;
+    let stackedWafers = [], defectColumn;
+    let animatedWires = [];
+    let ohtVehicle;
+
+    let params = {
+      zCompFactor: 1.0,
+      hotspotPower: 2.5,
+      jitterDensity: 1.0,
+      motionSpeed: 1.0,
+      vfWireframe: true,
+      vfColormap: true,
+      vfAutoRotate: false,
+      vfShowFlags: true,
+      warpScale: 25,
+      warpMode: 'saddle',
+      overdriveDepth: 1.2,
+      explodeDistance: 0,
+      clipOffset: 0,
+      opacity: 0.75,
+      waferGap: 1.8,
+      waferOpacity: 0.6
+    };
+
+    function getColorFromHeight(normalizedVal) {
+      const color = new THREE.Color();
+      if (normalizedVal < 0.25) color.setRGB(0, normalizedVal / 0.25, 1);
+      else if (normalizedVal < 0.5) color.setRGB(0, 1, 1 - (normalizedVal - 0.25) / 0.25);
+      else if (normalizedVal < 0.75) color.setRGB((normalizedVal - 0.5) / 0.25, 1, 0);
+      else color.setRGB(1, 1 - (normalizedVal - 0.75) / 0.25, 0);
+      return color;
+    }
+
+    function initThree() {
+      const container = document.getElementById('canvas-container');
+      scene = new THREE.Scene();
+      scene.background = new THREE.Color(0x070a12);
+      scene.fog = new THREE.FogExp2(0x070a12, 0.008);
+
+      camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+      camera.position.set(0, 28, 38);
+
+      renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.localClippingEnabled = true;
+      container.appendChild(renderer.domElement);
+
+      controls = new THREE.OrbitControls(camera, renderer.domElement);
+      controls.enableDamping = true;
+      controls.dampingFactor = 0.05;
+
+      const ambientLight = new THREE.AmbientLight(0xffffff, 0.85);
+      scene.add(ambientLight);
+
+      const dirLight1 = new THREE.DirectionalLight(0xffffff, 1.1);
+      dirLight1.position.set(80, 120, 80);
+      scene.add(dirLight1);
+
+      const dirLight2 = new THREE.DirectionalLight(0x38bdf8, 0.6);
+      dirLight2.position.set(-80, 50, -60);
+      scene.add(dirLight2);
+
+      scene.add(mainGroup);
+      scene.add(flagMarkerGroup);
+
+      window.addEventListener('resize', onWindowResize);
+      setupRaycasterEvents();
+    }
+
+    function onWindowResize() {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    }
+
+    function clearMainGroup() {
+      while (mainGroup.children.length > 0) mainGroup.remove(mainGroup.children[0]);
+      clearFlagMarkers();
+      document.getElementById('color-legend-box').style.display = 'none';
+    }
+
+    // --- 场景 1: 探针台高度补偿 (Focus Map) ---
+    function buildFocusMapScenario() {
+      clearMainGroup();
+      camera.position.set(0, 28, 38);
+      controls.target.set(0, 0, 0);
+
+      const chuck = new THREE.Mesh(new THREE.CylinderGeometry(16, 16, 1.5, 48), new THREE.MeshStandardMaterial({ color: 0x1e293b, metalness: 0.8, roughness: 0.3 }));
+      chuck.position.y = -1; mainGroup.add(chuck);
+
+      const surfaceGeo = new THREE.CircleGeometry(15, 60).rotateX(-Math.PI / 2);
+      const pos = surfaceGeo.attributes.position, count = pos.count;
+      surfaceGeo.setAttribute('color', new THREE.BufferAttribute(new Float32Array(count * 3), 3));
+      const col = surfaceGeo.attributes.color;
+
+      for (let i = 0; i < count; i++) {
+        const x = pos.getX(i), z = pos.getZ(i);
+        const y = (x * 0.08 + z * 0.04 + Math.sin(Math.sqrt(x*x+z*z)*0.4)*0.8) * params.zCompFactor;
+        pos.setY(i, y);
+        const norm = (y + 1.5) / 3.0;
+        col.setXYZ(i, Math.min(1, Math.max(0, norm)), Math.min(1, Math.max(0, 1 - Math.abs(norm - 0.5) * 2)), Math.min(1, Math.max(0, 1 - norm)));
+      }
+      surfaceGeo.computeVertexNormals();
+      mainGroup.add(new THREE.Mesh(surfaceGeo, new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.2, side: THREE.DoubleSide })));
+
+      for (let px = -10; px <= 10; px += 5) {
+        for (let pz = -10; pz <= 10; pz += 5) {
+          if (px*px + pz*pz > 150) continue;
+          const dot = new THREE.Mesh(new THREE.SphereGeometry(0.3, 12, 12), new THREE.MeshBasicMaterial({ color: 0x38bdf8 }));
+          const y = (px * 0.08 + pz * 0.04 + Math.sin(Math.sqrt(px*px+pz*pz)*0.4)*0.8) * params.zCompFactor;
+          dot.position.set(px, y + 0.1, pz);
+          mainGroup.add(dot);
+        }
+      }
+
+      laserSensorMesh = new THREE.Group();
+      laserSensorMesh.add(new THREE.Mesh(new THREE.CylinderGeometry(0.8, 0.8, 4, 16), new THREE.MeshStandardMaterial({ color: 0x64748b, metalness: 0.9 })));
+      const beam = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 8, 8), new THREE.MeshBasicMaterial({ color: 0xef4444 }));
+      beam.position.y = -4; laserSensorMesh.add(beam);
+      laserSensorMesh.position.set(0, 10, 0); mainGroup.add(laserSensorMesh);
+    }
+
+    // --- 场景 2: 红外热成像发热点 (IR Thermal) ---
+    function buildThermalScenario() {
+      clearMainGroup();
+      camera.position.set(22, 20, 26);
+      controls.target.set(0, 2, 0);
+
+      mainGroup.add(new THREE.Mesh(new THREE.BoxGeometry(22, 1.0, 22), new THREE.MeshStandardMaterial({ color: 0x1e293b, metalness: 0.5 })));
+
+      const thermGeo = new THREE.PlaneGeometry(18, 18, 50, 50).rotateX(-Math.PI / 2);
+      const pos = thermGeo.attributes.position, count = pos.count;
+      thermGeo.setAttribute('color', new THREE.BufferAttribute(new Float32Array(count * 3), 3));
+      const col = thermGeo.attributes.color;
+      const hotspotX = 3.0, hotspotZ = -2.5;
+
+      for (let i = 0; i < count; i++) {
+        const x = pos.getX(i), z = pos.getZ(i);
+        const dist = Math.sqrt((x - hotspotX)**2 + (z - hotspotZ)**2);
+        const tempRise = Math.exp(-dist * 0.6) * params.hotspotPower * 3.0 + (Math.sin(x*0.5)*Math.cos(z*0.5)*0.5);
+        pos.setY(i, tempRise + 0.6);
+
+        const tNorm = Math.min(1, Math.max(0, tempRise / 7.5));
+        if (tNorm < 0.3) col.setXYZ(i, 0, tNorm/0.3, 1);
+        else if (tNorm < 0.7) col.setXYZ(i, (tNorm-0.3)/0.4, 1, 0);
+        else col.setXYZ(i, 1, 1 - (tNorm-0.7)/0.3, (tNorm-0.7)/0.3);
+      }
+      thermGeo.computeVertexNormals();
+      thermalMesh = new THREE.Mesh(thermGeo, new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.2, side: THREE.DoubleSide }));
+      mainGroup.add(thermalMesh);
+
+      const marker = new THREE.Mesh(new THREE.RingGeometry(0.6, 0.8, 24).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ color: 0xffffff, side: THREE.DoubleSide }));
+      marker.position.set(hotspotX, params.hotspotPower * 3.0 + 0.8, hotspotZ);
+      mainGroup.add(marker);
+    }
+
+    // --- 场景 3: 高速信号 3D 眼图 (Eye 3D) ---
+    function buildEyeDiagramScenario() {
+      clearMainGroup();
+      camera.position.set(0, 18, 30);
+      controls.target.set(0, 4, 0);
+
+      const eyeGeo = new THREE.PlaneGeometry(24, 16, 60, 60).rotateX(-Math.PI / 2);
+      const pos = eyeGeo.attributes.position, count = pos.count;
+      eyeGeo.setAttribute('color', new THREE.BufferAttribute(new Float32Array(count * 3), 3));
+      const col = eyeGeo.attributes.color;
+
+      for (let i = 0; i < count; i++) {
+        const x = pos.getX(i), z = pos.getZ(i);
+        const minDist = Math.min(Math.abs(z - 5 * Math.sin(x * 0.26)), Math.abs(z + 5 * Math.sin(x * 0.26)));
+        let hitDensity = Math.exp(-minDist * 0.8) * 5.5 * params.jitterDensity;
+        if (Math.abs(x) < 4 && Math.abs(z) < 3) hitDensity = 0.05;
+
+        pos.setY(i, hitDensity);
+        const dNorm = Math.min(1, hitDensity / 5.0);
+        col.setXYZ(i, dNorm, 1 - dNorm * 0.8, 1 - dNorm);
+      }
+      eyeGeo.computeVertexNormals();
+      eyeMesh = new THREE.Mesh(eyeGeo, new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.3, side: THREE.DoubleSide }));
+      mainGroup.add(eyeMesh);
+    }
+
+    // --- 场景 4: 机械手运动与防撞 (Robot Motion) ---
+    function buildMotionRobotScenario() {
+      clearMainGroup();
+      camera.position.set(25, 22, 32);
+      controls.target.set(0, 3, 0);
+
+      const table = new THREE.Mesh(new THREE.BoxGeometry(32, 1.0, 24), new THREE.MeshStandardMaterial({ color: 0x1e293b }));
+      table.position.y = -0.5; mainGroup.add(table);
+
+      const socket = new THREE.Mesh(new THREE.BoxGeometry(6, 1.2, 6), new THREE.MeshStandardMaterial({ color: 0x0284c7 }));
+      socket.position.set(8, 0.6, 0); mainGroup.add(socket);
+
+      const tray = new THREE.Mesh(new THREE.BoxGeometry(10, 0.4, 10), new THREE.MeshStandardMaterial({ color: 0x334155 }));
+      tray.position.set(-8, 0.2, 0); mainGroup.add(tray);
+
+      safeZoneBox = new THREE.Mesh(new THREE.BoxGeometry(8, 6, 8), new THREE.MeshBasicMaterial({ color: 0xef4444, wireframe: true, transparent: true, opacity: 0.5 }));
+      safeZoneBox.position.set(8, 3.5, 0); mainGroup.add(safeZoneBox);
+
+      robotGripper = new THREE.Group();
+      const armZ = new THREE.Mesh(new THREE.CylinderGeometry(0.6, 0.6, 8, 16), new THREE.MeshStandardMaterial({ color: 0x64748b, metalness: 0.8 }));
+      armZ.position.y = 4; robotGripper.add(armZ);
+
+      const suctionHead = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 1.2, 12), new THREE.MeshStandardMaterial({ color: 0xf59e0b }));
+      suctionHead.position.y = -0.6; robotGripper.add(suctionHead);
+
+      const chip = new THREE.Mesh(new THREE.BoxGeometry(2, 0.3, 2), new THREE.MeshStandardMaterial({ color: 0x10b981 }));
+      chip.position.y = -1.35; robotGripper.add(chip);
+
+      robotGripper.position.set(-8, 4, 0); mainGroup.add(robotGripper);
+    }
+
+    // --- 场景 5: V-F 响应曲面 & 打标 (V-F Surface) ---
+    const BOX_X = 80, BOX_Z = 80, BOX_Y = 60, SEGMENTS = 48;
+    function computeVF(u, v) {
+      const vCore = 0.3 + u * 1.2, vIO = 0.6 + v * 1.2;
+      const power = (vCore - 0.75) * 4.0 + (vIO - 1.1) * 2.0;
+      const sigmoid = 1.0 / (1.0 + Math.exp(-power));
+      const curvature = Math.sin(u * Math.PI * 0.8) * Math.cos(v * Math.PI * 0.7) * 40;
+      return Math.min(Math.max(sigmoid * 720 + curvature + 60, 20), 800);
+    }
+
+    function buildVFSurfaceScenario() {
+      clearMainGroup();
+      camera.position.set(130, 90, 140);
+      controls.target.set(0, 25, 0);
+
+      const geometry = new THREE.PlaneGeometry(BOX_X, BOX_Z, SEGMENTS, SEGMENTS).rotateX(-Math.PI / 2);
+      const pos = geometry.attributes.position, colors = [];
+      const colorLow = new THREE.Color('#22c55e'), colorMid = new THREE.Color('#eab308'), colorHigh = new THREE.Color('#ef4444');
+
+      for (let i = 0; i < pos.count; i++) {
+        const x = pos.getX(i), z = pos.getZ(i);
+        const u = (x + BOX_X / 2) / BOX_X, v = (z + BOX_Z / 2) / BOX_Z;
+        const freq = computeVF(u, v);
+        pos.setY(i, (freq / 800) * BOX_Y);
+
+        const ratio = freq / 800;
+        const vertexColor = new THREE.Color();
+        if (ratio < 0.5) vertexColor.lerpColors(colorLow, colorMid, ratio / 0.5);
+        else vertexColor.lerpColors(colorMid, colorHigh, (ratio - 0.5) / 0.5);
+        colors.push(vertexColor.r, vertexColor.g, vertexColor.b);
+      }
+      geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
+      geometry.computeVertexNormals();
+
+      vfMesh = new THREE.Mesh(geometry, new THREE.MeshStandardMaterial({ vertexColors: params.vfColormap, roughness: 0.35, metalness: 0.15, side: THREE.DoubleSide }));
+      mainGroup.add(vfMesh);
+
+      vfWireframe = new THREE.Mesh(geometry, new THREE.MeshBasicMaterial({ color: 0x0f172a, wireframe: true, transparent: true, opacity: 0.45 }));
+      vfWireframe.visible = params.vfWireframe; mainGroup.add(vfWireframe);
+
+      buildVFGridBox();
+
+      const samplePoints = [
+        { u: 0.15, v: 0.85, status: 'pass', freq: 520, vcore: 0.48 },
+        { u: 0.25, v: 0.15, status: 'fail', freq: 740, vcore: 0.60 },
+        { u: 0.65, v: 0.35, status: 'warn', freq: 650, vcore: 1.08 },
+        { u: 0.75, v: 0.75, status: 'warn', freq: 580, vcore: 1.20 }
+      ];
+      samplePoints.forEach(p => addFlagMarker(p.u, p.v, p));
+    }
+
+    function buildVFGridBox() {
+      vfGridGroup = new THREE.Group();
+      function createGridPlane(w, h, wSegs, hSegs, plane, offsetPos) {
+        const lineGroup = new THREE.Group();
+        const mat = new THREE.LineBasicMaterial({ color: 0x222938, transparent: true, opacity: 0.8 });
+        const borderMat = new THREE.LineBasicMaterial({ color: 0x475569, linewidth: 1.5 });
+        const halfW = w / 2, halfH = h / 2;
+
+        for (let i = 0; i <= wSegs; i++) {
+          const x = -halfW + (w / wSegs) * i, pts = [];
+          if (plane === 'XZ') pts.push(new THREE.Vector3(x, 0, -halfH), new THREE.Vector3(x, 0, halfH));
+          if (plane === 'YZ') pts.push(new THREE.Vector3(0, -halfH, x), new THREE.Vector3(0, halfH, x));
+          if (plane === 'XY') pts.push(new THREE.Vector3(x, -halfH, 0), new THREE.Vector3(x, halfH, 0));
+          lineGroup.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), (i === 0 || i === wSegs) ? borderMat : mat));
+        }
+        for (let j = 0; j <= hSegs; j++) {
+          const y = -halfH + (h / hSegs) * j, pts = [];
+          if (plane === 'XZ') pts.push(new THREE.Vector3(-halfW, 0, y), new THREE.Vector3(halfW, 0, y));
+          if (plane === 'YZ') pts.push(new THREE.Vector3(0, y, -halfW), new THREE.Vector3(0, y, halfW));
+          if (plane === 'XY') pts.push(new THREE.Vector3(-halfW, y, 0), new THREE.Vector3(halfW, y, 0));
+          lineGroup.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), (j === 0 || j === hSegs) ? borderMat : mat));
+        }
+        lineGroup.position.set(...offsetPos);
+        return lineGroup;
+      }
+      vfGridGroup.add(createGridPlane(BOX_X, BOX_Z, 8, 8, 'XZ', [0, 0, 0]));
+      vfGridGroup.add(createGridPlane(BOX_X, BOX_Y, 8, 8, 'XY', [0, BOX_Y / 2, -BOX_Z / 2]));
+      vfGridGroup.add(createGridPlane(BOX_Z, BOX_Y, 8, 8, 'YZ', [-BOX_X / 2, BOX_Y / 2, 0]));
+      mainGroup.add(vfGridGroup);
+
+      vfLabelGroup = new THREE.Group();
+      function createTextSprite(text, fontSize = 24, textColor = '#cbd5e1', isBold = false) {
+        const canvas = document.createElement('canvas'), ctx = canvas.getContext('2d');
+        canvas.width = 256; canvas.height = 64;
+        ctx.font = `${isBold ? 'bold ' : ''}${fontSize}px monospace, sans-serif`;
+        ctx.fillStyle = textColor; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText(text, canvas.width / 2, canvas.height / 2);
+        const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(canvas), transparent: true }));
+        sprite.scale.set(16, 4, 1); return sprite;
+      }
+      for (let i = 0; i <= 8; i += 2) {
+        const tick = createTextSprite((i * 100).toString(), 28, '#cbd5e1');
+        tick.position.set(-BOX_X / 2 - 8, ((i * 100) / 800) * BOX_Y, -BOX_Z / 2);
+        vfLabelGroup.add(tick);
+      }
+      const zTitle = createTextSprite('F_Standby', 30, '#f8fafc', true); zTitle.position.set(-BOX_X / 2 - 20, BOX_Y * 0.5, -BOX_Z / 2); vfLabelGroup.add(zTitle);
+      const xTitle = createTextSprite('VDD_Core', 30, '#f8fafc', true); xTitle.position.set(0, -6, BOX_Z / 2 + 12); vfLabelGroup.add(xTitle);
+      const yTitle = createTextSprite('VDD_IO', 30, '#f8fafc', true); yTitle.position.set(BOX_X / 2 + 16, -6, 0); vfLabelGroup.add(yTitle);
+      mainGroup.add(vfLabelGroup);
+    }
+
+    function addFlagMarker(u, v, options = {}) {
+      const x = -BOX_X / 2 + u * BOX_X, z = -BOX_Z / 2 + v * BOX_Z;
+      const freq = Math.round(options.freq || computeVF(u, v));
+      const y = (freq / 800) * BOX_Y;
+      const vcore = options.vcore || (0.3 + u * 1.2).toFixed(2);
+      const status = options.status || (freq > 700 ? 'fail' : (freq > 550 ? 'warn' : 'pass'));
+      const statusText = status === 'pass' ? 'Pass' : (status === 'fail' ? 'Fail' : `${freq}MHz`);
+
+      const poleHeight = 12;
+      const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.25, poleHeight), new THREE.MeshBasicMaterial({ color: 0xffffff }));
+      pole.position.set(x, y + poleHeight / 2, z);
+
+      const sphere = new THREE.Mesh(
+        new THREE.SphereGeometry(1.2, 16, 16),
+        new THREE.MeshStandardMaterial({
+          color: status === 'pass' ? 0x22c55e : (status === 'fail' ? 0xef4444 : 0xeab308),
+          emissive: status === 'pass' ? 0x166534 : 0x7f1d1d,
+          emissiveIntensity: 0.6
+        })
+      );
+      sphere.position.set(x, y, z);
+
+      const markerObj3D = new THREE.Group();
+      markerObj3D.add(pole); markerObj3D.add(sphere);
+      flagMarkerGroup.add(markerObj3D);
+
+      const domEl = document.createElement('div');
+      domEl.className = 'flag-marker';
+      domEl.innerHTML = `
+        <div class="flag-content flag-${status}">
+          <div class="flag-title"><span class="flag-icon"></span>F=${freq}MHz</div>
+          <div class="flag-value">V=${vcore}V • ${statusText}</div>
+        </div>
+      `;
+      document.body.appendChild(domEl);
+
+      flagMarkers.push({ pos3D: new THREE.Vector3(x, y + poleHeight, z), domEl: domEl, obj3D: markerObj3D });
+    }
+
+    function clearFlagMarkers() {
+      flagMarkers.forEach(m => { if (m.domEl && m.domEl.parentNode) m.domEl.parentNode.removeChild(m.domEl); });
+      flagMarkers = [];
+      while (flagMarkerGroup.children.length > 0) flagMarkerGroup.remove(flagMarkerGroup.children[0]);
+    }
+
+    function updateFlagMarkersPosition() {
+      if (currentScenario !== 'vfSurface' || !params.vfShowFlags) {
+        flagMarkers.forEach(m => m.domEl.style.display = 'none');
+        return;
+      }
+      const halfW = window.innerWidth / 2, halfH = window.innerHeight / 2, tempV = new THREE.Vector3();
+      flagMarkers.forEach(m => {
+        tempV.copy(m.pos3D);
+        tempV.project(camera);
+        if (tempV.z > 1.0) { m.domEl.style.display = 'none'; return; }
+        m.domEl.style.display = 'flex';
+        m.domEl.style.left = `${(tempV.x * halfW) + halfW}px`;
+        m.domEl.style.top = `${-(tempV.y * halfH) + halfH}px`;
+      });
+    }
+
+    // --- 场景 6: 晶圆翘曲度形貌 (Warpage) ---
+    function buildWarpageScenario() {
+      clearMainGroup();
+      document.getElementById('color-legend-box').style.display = 'flex';
+      camera.position.set(0, 30, 42);
+      controls.target.set(0, 0, 0);
+
+      const geometry = new THREE.CircleGeometry(15, 80).rotateX(-Math.PI / 2);
+      const count = geometry.attributes.position.count;
+      geometry.setAttribute('color', new THREE.BufferAttribute(new Float32Array(count * 3), 3));
+      updateWarpageGeometry(geometry);
+
+      warpageMesh = new THREE.Mesh(geometry, new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.3, metalness: 0.4, side: THREE.DoubleSide }));
+      mainGroup.add(warpageMesh);
+
+      warpageWireframe = new THREE.Mesh(geometry, new THREE.MeshBasicMaterial({ color: 0xffffff, wireframe: true, transparent: true, opacity: 0.15 }));
+      mainGroup.add(warpageWireframe);
+
+      const ring = new THREE.Mesh(new THREE.RingGeometry(15, 15.6, 80).rotateX(-Math.PI / 2), new THREE.MeshStandardMaterial({ color: 0x475569, metalness: 0.8 }));
+      ring.position.y = -0.1; mainGroup.add(ring);
+    }
+
+    function updateWarpageGeometry(geo) {
+      if (!geo) geo = warpageMesh.geometry;
+      const pos = geo.attributes.position, col = geo.attributes.color, count = pos.count;
+      const scale = params.warpScale * 0.05;
+      let minZ = Infinity, maxZ = -Infinity;
+
+      for (let i = 0; i < count; i++) {
+        const x = pos.getX(i), z = pos.getZ(i), r = Math.sqrt(x * x + z * z);
+        let y = 0;
+        if (params.warpMode === 'saddle') y = ((x * x - z * z) / 45) * scale;
+        else if (params.warpMode === 'bowl') y = ((r * r - 100) / 40) * scale;
+        else if (params.warpMode === 'wavy') y = (Math.sin(x * 0.4) * Math.cos(z * 0.4) * 3) * scale;
+
+        pos.setY(i, y);
+        if (y < minZ) minZ = y; if (y > maxZ) maxZ = y;
+      }
+      for (let i = 0; i < count; i++) {
+        const norm = (pos.getY(i) - minZ) / (maxZ - minZ || 1);
+        const c = getColorFromHeight(norm);
+        col.setXYZ(i, c.r, c.g, c.b);
+      }
+      pos.needsUpdate = true; col.needsUpdate = true;
+      geo.computeVertexNormals();
+
+      document.getElementById('legend-max').textContent = `+${(maxZ * 12.5).toFixed(1)} μm`;
+      document.getElementById('legend-min').textContent = `${(minZ * 12.5).toFixed(1)} μm`;
+    }
+
+    // --- 场景 7: 探针共面与针痕 (Probe Mark) ---
+    function buildProbeMarkScenario() {
+      clearMainGroup();
+      camera.position.set(0, 14, 20);
+      controls.target.set(0, 2, 0);
+
+      mainGroup.add(new THREE.Mesh(new THREE.BoxGeometry(16, 1.5, 16), new THREE.MeshStandardMaterial({ color: 0x94a3b8, metalness: 0.6 })));
+
+      const markGeo = new THREE.PlaneGeometry(12, 12, 60, 60).rotateX(-Math.PI / 2);
+      const pos = markGeo.attributes.position, count = pos.count;
+      markGeo.setAttribute('color', new THREE.BufferAttribute(new Float32Array(count * 3), 3));
+      const col = markGeo.attributes.color;
+
+      for (let i = 0; i < count; i++) {
+        const x = pos.getX(i), z = pos.getZ(i);
+        const dist = Math.sqrt((x * x) / 2 + (z - 1) * (z - 1));
+        let y = -Math.exp(-dist * 0.8) * params.overdriveDepth * 2.5;
+        if (dist > 1.8 && dist < 2.8) y += 0.4;
+        pos.setY(i, y + 0.8);
+        const depthNorm = Math.min(1.0, Math.max(0, -y / 3.0));
+        col.setXYZ(i, depthNorm, 1 - depthNorm, 0.2);
+      }
+      pos.needsUpdate = true; col.needsUpdate = true;
+      markGeo.computeVertexNormals();
+      mainGroup.add(new THREE.Mesh(markGeo, new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.3 })));
+
+      const tip = new THREE.Mesh(new THREE.ConeGeometry(0.8, 6, 16).rotateX(Math.PI), new THREE.MeshStandardMaterial({ color: 0x475569, metalness: 0.9 }));
+      tip.position.set(0, 6, 1); mainGroup.add(tip);
+    }
+
+    // --- 场景 8: 3D IC 堆叠失效 (Chiplet) ---
+    function buildStackingScenario() {
+      clearMainGroup();
+      camera.position.set(25, 25, 35);
+      controls.target.set(0, 4, 0);
+      stackingLayers = []; defectBumps = [];
+
+      const subGroup = new THREE.Group();
+      subGroup.add(new THREE.Mesh(new THREE.BoxGeometry(26, 1.2, 26), new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.5, metalness: 0.5 })));
+      subGroup.userData = { baseElevation: 0, index: 0 };
+      stackingLayers.push(subGroup); mainGroup.add(subGroup);
+
+      const intGroup = new THREE.Group();
+      intGroup.add(new THREE.Mesh(new THREE.BoxGeometry(20, 0.6, 20), new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.2, metalness: 0.7 })));
+      createMicroBumps(intGroup, 18, 18, 1.8, -0.6);
+      intGroup.userData = { baseElevation: 2.2, index: 1 };
+      stackingLayers.push(intGroup); mainGroup.add(intGroup);
+
+      const logicGroup = new THREE.Group();
+      logicGroup.add(new THREE.Mesh(new THREE.BoxGeometry(10, 0.8, 10), new THREE.MeshStandardMaterial({ color: 0x0284c7, roughness: 0.3, metalness: 0.6 })));
+      createMicroBumps(logicGroup, 8, 8, 1.2, -0.6);
+      logicGroup.position.set(-4, 0, 0);
+      logicGroup.userData = { baseElevation: 4.2, index: 2 };
+      stackingLayers.push(logicGroup); mainGroup.add(logicGroup);
+
+      for (let i = 0; i < 4; i++) {
+        const hbmGroup = new THREE.Group();
+        hbmGroup.add(new THREE.Mesh(new THREE.BoxGeometry(6, 0.5, 8), new THREE.MeshStandardMaterial({ color: i === 3 ? 0x059669 : 0x0d9488, metalness: 0.8 })));
+        createTSVArray(hbmGroup, 5, 7, 1.0, -0.4, i === 2);
+        hbmGroup.position.set(5.5, 0, 0);
+        hbmGroup.userData = { baseElevation: 4.2 + i * 1.5, index: 3 + i };
+        stackingLayers.push(hbmGroup); mainGroup.add(hbmGroup);
+      }
+      applyStackingExplosion();
+    }
+
+    function createMicroBumps(parent, width, length, step, yOffset) {
+      const geo = new THREE.CylinderGeometry(0.18, 0.18, 0.4, 8), mat = new THREE.MeshStandardMaterial({ color: 0xf59e0b, metalness: 0.9 });
+      for (let x = -width / 2 + 1; x <= width / 2 - 1; x += step) {
+        for (let z = -length / 2 + 1; z <= length / 2 - 1; z += step) {
+          const bump = new THREE.Mesh(geo, mat); bump.position.set(x, yOffset, z); parent.add(bump);
+        }
+      }
+    }
+
+    function createTSVArray(parent, width, length, step, yOffset, hasDefect) {
+      const normalGeo = new THREE.CylinderGeometry(0.12, 0.12, 0.4, 8), normalMat = new THREE.MeshStandardMaterial({ color: 0xe2e8f0, metalness: 0.9 });
+      const failMat = new THREE.MeshStandardMaterial({ color: 0xef4444, emissive: 0xef4444, emissiveIntensity: 0.9 });
+
+      for (let x = -width / 2 + 0.8; x <= width / 2 - 0.8; x += step) {
+        for (let z = -length / 2 + 0.8; z <= length / 2 - 0.8; z += step) {
+          const isDefect = hasDefect && Math.abs(x - 0.8) < 0.2 && Math.abs(z - 0.8) < 0.2;
+          const tsv = new THREE.Mesh(normalGeo, isDefect ? failMat : normalMat);
+          tsv.position.set(x, yOffset, z); parent.add(tsv);
+          if (isDefect) defectBumps.push(tsv);
+        }
+      }
+    }
+
+    function applyStackingExplosion() {
+      const dist = params.explodeDistance;
+      stackingLayers.forEach(l => l.position.y = l.userData.baseElevation + l.userData.index * dist * 3.5);
+    }
+
+    // --- 场景 9: 焊点微观空洞剖切 (Void) ---
+    function buildVoidScenario() {
+      clearMainGroup();
+      camera.position.set(0, 15, 25);
+      controls.target.set(0, 4, 0);
+
+      clippingPlane = new THREE.Plane(new THREE.Vector3(0, 0, -1), params.clipOffset);
+      voidMeshGroup = new THREE.Group();
+
+      const pad = new THREE.Mesh(new THREE.CylinderGeometry(8, 8, 1, 32), new THREE.MeshStandardMaterial({ color: 0xb45309, metalness: 0.8 }));
+      pad.position.y = 0.5; voidMeshGroup.add(pad);
+
+      const bump = new THREE.Mesh(
+        new THREE.SphereGeometry(6, 40, 40, 0, Math.PI * 2, 0, Math.PI * 0.82),
+        new THREE.MeshPhysicalMaterial({ color: 0x94a3b8, metalness: 0.6, transparent: true, opacity: params.opacity, transmission: 0.4, clippingPlanes: [clippingPlane], side: THREE.DoubleSide })
+      );
+      bump.position.y = 1.0; voidMeshGroup.add(bump);
+
+      const void1 = new THREE.Mesh(new THREE.DodecahedronGeometry(1.6, 2), new THREE.MeshStandardMaterial({ color: 0xef4444, emissive: 0xef4444, emissiveIntensity: 0.5, clippingPlanes: [clippingPlane] }));
+      void1.position.set(1.2, 4.5, 0.5); voidMeshGroup.add(void1);
+
+      const void2 = new THREE.Mesh(new THREE.SphereGeometry(0.8, 16, 16), new THREE.MeshStandardMaterial({ color: 0xf59e0b, emissive: 0xf59e0b, emissiveIntensity: 0.4, clippingPlanes: [clippingPlane] }));
+      void2.position.set(-2.0, 3.2, -1.0); voidMeshGroup.add(void2);
+
+      mainGroup.add(voidMeshGroup);
+    }
+
+    // --- 场景 10: 批次穿透透视 (Lot Stack) ---
+    function buildStackedLotScenario() {
+      clearMainGroup();
+      camera.position.set(32, 22, 38);
+      controls.target.set(0, 5, 0);
+      stackedWafers = [];
+
+      for (let i = 0; i < 10; i++) {
+        const wGroup = new THREE.Group();
+        const disc = new THREE.Mesh(
+          new THREE.CylinderGeometry(12, 12, 0.2, 48),
+          new THREE.MeshStandardMaterial({ color: i % 2 === 0 ? 0x0284c7 : 0x0369a1, transparent: true, opacity: params.waferOpacity, metalness: 0.6 })
+        );
+        wGroup.add(disc);
+
+        const sysDefect = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.35, 0.8), new THREE.MeshBasicMaterial({ color: 0xef4444 }));
+        sysDefect.position.set(4, 0.15, -3);
+        wGroup.add(sysDefect);
+
+        wGroup.position.y = i * params.waferGap;
+        stackedWafers.push(wGroup); mainGroup.add(wGroup);
+      }
+
+      defectColumn = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.4, 0.4, 10 * params.waferGap + 2, 16),
+        new THREE.MeshBasicMaterial({ color: 0xef4444, transparent: true, opacity: 0.6, wireframe: true })
+      );
+      defectColumn.position.set(4, (10 * params.waferGap) / 2, -3);
+      mainGroup.add(defectColumn);
+    }
+
+    function updateStackedLot() {
+      stackedWafers.forEach((w, i) => {
+        w.position.y = i * params.waferGap;
+        w.children[0].material.opacity = params.waferOpacity;
+      });
+      if (defectColumn) {
+        defectColumn.scale.y = params.waferGap / 1.8;
+        defectColumn.position.y = (stackedWafers.length * params.waferGap) / 2;
+      }
+    }
+
+    // --- 场景 11: 引线键合短路 (Wire Bond) ---
+    function buildWireBondScenario() {
+      clearMainGroup();
+      camera.position.set(18, 16, 22);
+      controls.target.set(0, 2, 0);
+      animatedWires = [];
+
+      mainGroup.add(new THREE.Mesh(new THREE.BoxGeometry(24, 0.6, 20), new THREE.MeshStandardMaterial({ color: 0x475569, metalness: 0.8 })));
+      const die = new THREE.Mesh(new THREE.BoxGeometry(10, 0.8, 8), new THREE.MeshStandardMaterial({ color: 0x0f172a, metalness: 0.9 }));
+      die.position.y = 0.7; mainGroup.add(die);
+
+      for (let i = 0; i < 8; i++) {
+        const startX = -4.0 + i * 1.1, endX = -9.0 + i * 2.4, isShort = (i === 3);
+        const curve = new THREE.QuadraticBezierCurve3(
+          new THREE.Vector3(startX, 1.1, -3.2),
+          new THREE.Vector3((startX + endX) / 2 + (isShort ? 1.5 : 0), 4.5 + (isShort ? -1.8 : 0), -5.6),
+          new THREE.Vector3(endX, 0.3, -8.0)
+        );
+        const wireMesh = new THREE.Mesh(
+          new THREE.TubeGeometry(curve, 32, 0.08, 8, false),
+          new THREE.MeshStandardMaterial({ color: isShort ? 0xef4444 : 0xf59e0b, metalness: 0.9, emissive: isShort ? 0xef4444 : 0x000000 })
+        );
+        mainGroup.add(wireMesh);
+        if (isShort) animatedWires.push(wireMesh);
+      }
+    }
+
+    // --- 场景 12: 车间数字孪生 (Fab Twin) ---
+    function buildFabTwinScenario() {
+      clearMainGroup();
+      camera.position.set(35, 30, 40);
+      controls.target.set(0, 0, 0);
+
+      mainGroup.add(new THREE.Mesh(new THREE.PlaneGeometry(60, 60).rotateX(-Math.PI / 2), new THREE.MeshStandardMaterial({ color: 0x0f172a })));
+
+      for (let r = -1; r <= 1; r++) {
+        for (let c = -1; c <= 1; c++) {
+          if (r === 0 && c === 0) continue;
+          const tg = new THREE.Group();
+          tg.add(new THREE.Mesh(new THREE.BoxGeometry(6, 7, 6), new THREE.MeshStandardMaterial({ color: 0x1e293b })));
+          const light = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.3, 1.2, 16), new THREE.MeshBasicMaterial({ color: (r === 1 && c === 1) ? 0xef4444 : 0x10b981 }));
+          light.position.set(2.4, 7.6, 2.4); tg.add(light);
+          tg.position.set(c * 18, 0, r * 16); mainGroup.add(tg);
+        }
+      }
+
+      const track = new THREE.Mesh(new THREE.BoxGeometry(50, 0.4, 0.4), new THREE.MeshStandardMaterial({ color: 0x64748b, metalness: 0.8 }));
+      track.position.set(0, 11, 0); mainGroup.add(track);
+
+      ohtVehicle = new THREE.Group();
+      ohtVehicle.add(new THREE.Mesh(new THREE.BoxGeometry(3, 1.5, 2), new THREE.MeshStandardMaterial({ color: 0x38bdf8 })));
+      const foup = new THREE.Mesh(new THREE.BoxGeometry(1.6, 1.4, 1.6), new THREE.MeshStandardMaterial({ color: 0x0284c7, transparent: true, opacity: 0.8 }));
+      foup.position.y = -1.2; ohtVehicle.add(foup);
+      ohtVehicle.position.set(0, 10.2, 0); mainGroup.add(ohtVehicle);
+    }
+
+    // --- Raycaster 悬浮 Tooltip 与 点击打标 ---
+    function setupRaycasterEvents() {
+      const raycaster = new THREE.Raycaster();
+      const mouse = new THREE.Vector2();
+      const tooltipEl = document.getElementById('hover-tooltip');
+
+      window.addEventListener('pointermove', (event) => {
+        if (currentScenario !== 'vfSurface' || !vfMesh) {
+          tooltipEl.style.display = 'none'; return;
+        }
+        mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+        mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+        raycaster.setFromCamera(mouse, camera);
+        const intersects = raycaster.intersectObject(vfMesh);
+
+        if (intersects.length > 0) {
+          const p = intersects[0].point;
+          const u = (p.x + BOX_X / 2) / BOX_X, v = (p.z + BOX_Z / 2) / BOX_Z;
+          const freq = Math.round((p.y / BOX_Y) * 800);
+          tooltipEl.style.display = 'block';
+          tooltipEl.style.left = `${event.clientX}px`;
+          tooltipEl.style.top = `${event.clientY}px`;
+          tooltipEl.innerHTML = `
+            <div><strong>F_Standby:</strong> ${freq} MHz</div>
+            <div><strong>VDD_Core:</strong> ${(0.3 + u * 1.2).toFixed(2)} V</div>
+            <div><strong>VDD_IO:</strong> ${(0.6 + v * 1.2).toFixed(2)} V</div>
+          `;
+        } else {
+          tooltipEl.style.display = 'none';
+        }
+      });
+
+      window.addEventListener('pointerdown', (event) => {
+        if (!addFlagMode || currentScenario !== 'vfSurface' || !vfMesh) return;
+        if (event.target.closest('header') || event.target.closest('aside') || event.target.closest('.flag-marker')) return;
+
+        mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+        mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+        raycaster.setFromCamera(mouse, camera);
+        const intersects = raycaster.intersectObject(vfMesh);
+
+        if (intersects.length > 0) {
+          const p = intersects[0].point;
+          const u = Math.min(Math.max((p.x + BOX_X / 2) / BOX_X, 0), 1);
+          const v = Math.min(Math.max((p.z + BOX_Z / 2) / BOX_Z, 0), 1);
+          addFlagMarker(u, v);
+        }
+      });
+    }
+
+    // --- 场景切换与 UI 渲染 ---
+    function switchScenario(name) {
+      currentScenario = name;
+
+      document.querySelectorAll('.scenario-btn').forEach(btn => {
+        btn.className = 'scenario-btn whitespace-nowrap px-2.5 py-1.5 rounded text-xs font-medium transition-all text-slate-400 hover:text-slate-200';
+      });
+      document.getElementById(`btn-${name}`).className = 'scenario-btn whitespace-nowrap px-2.5 py-1.5 rounded text-xs font-medium transition-all bg-cyan-600 text-white shadow';
+
+      const controlsContainer = document.getElementById('dynamic-controls');
+      const metricsContainer = document.getElementById('dynamic-metrics');
+      const panelTitle = document.getElementById('panel-title');
+      const panelBadge = document.getElementById('panel-badge');
+
+      if (name === 'focusMap') {
+        panelTitle.textContent = '探针台高度补偿 (Focus)';
+        panelBadge.textContent = 'Laser Auto-Z';
+        controlsContainer.innerHTML = `
+          <div>
+            <div class="flex justify-between text-slate-300 mb-1">
+              <span>Z 轴动态补偿增益:</span>
+              <span id="val-zcomp" class="font-mono text-cyan-400">${params.zCompFactor.toFixed(1)}x</span>
+            </div>
+            <input type="range" min="0.2" max="2.0" step="0.1" value="${params.zCompFactor}" class="w-full accent-cyan-500" oninput="params.zCompFactor=parseFloat(this.value); document.getElementById('val-zcomp').textContent=this.value+'x'; buildFocusMapScenario();" />
+          </div>
+          <div class="p-2 rounded bg-cyan-950/50 border border-cyan-800 text-[10px] text-slate-300">
+            上位机根据激光点阵构建 3D Focus Map，闭环控制 Z 轴微动台防撞针。
+          </div>
+        `;
+        metricsContainer.innerHTML = `
+          <div>激光采样点: <span class="text-cyan-400 font-bold">49 Points</span></div>
+          <div>高度极差: <span class="text-amber-400">14.8 μm</span></div>
+          <div>对焦补偿延迟: <span class="text-emerald-400">0.8 ms</span></div>
+          <div>防撞安全余量: <span class="text-emerald-400">+35 μm</span></div>
+        `;
+        buildFocusMapScenario();
+
+      } else if (name === 'thermal3d') {
+        panelTitle.textContent = '红外热成像发热点 (IR)';
+        panelBadge.textContent = 'Lock-in Thermal';
+        controlsContainer.innerHTML = `
+          <div>
+            <div class="flex justify-between text-slate-300 mb-1">
+              <span>源表激励偏置功率 (Power):</span>
+              <span id="val-pwr" class="font-mono text-cyan-400">${params.hotspotPower} W</span>
+            </div>
+            <input type="range" min="0.5" max="5.0" step="0.2" value="${params.hotspotPower}" class="w-full accent-cyan-500" oninput="params.hotspotPower=parseFloat(this.value); document.getElementById('val-pwr').textContent=this.value+' W'; buildThermalScenario();" />
+          </div>
+          <div class="p-2 rounded bg-rose-950/40 border border-rose-800/60 text-[10px] text-slate-300">
+            🔴 识别到微区短路击穿点 (坐标: X 3.0, Z -2.5)，温升过高报警。
+          </div>
+        `;
+        metricsContainer.innerHTML = `
+          <div>最高结温: <span class="text-rose-400 font-bold">118.4 ℃</span></div>
+          <div>漏电流: <span class="text-rose-400 font-bold">342 mA</span></div>
+          <div>环境基准温: <span class="text-slate-200">25.1 ℃</span></div>
+          <div>失效判定: <span class="text-rose-400 font-bold">GATE LEAK</span></div>
+        `;
+        buildThermalScenario();
+
+      } else if (name === 'eyeDiagram') {
+        panelTitle.textContent = '高速信号 3D 眼图 (Eye)';
+        panelBadge.textContent = 'SerDes / Eye 3D';
+        controlsContainer.innerHTML = `
+          <div>
+            <div class="flex justify-between text-slate-300 mb-1">
+              <span>抖动注入系数 (Jitter):</span>
+              <span id="val-jit" class="font-mono text-cyan-400">${params.jitterDensity.toFixed(1)}x</span>
+            </div>
+            <input type="range" min="0.5" max="2.0" step="0.1" value="${params.jitterDensity}" class="w-full accent-cyan-500" oninput="params.jitterDensity=parseFloat(this.value); document.getElementById('val-jit').textContent=this.value+'x'; buildEyeDiagramScenario();" />
+          </div>
+        `;
+        metricsContainer.innerHTML = `
+          <div>眼高 (Height): <span class="text-emerald-400 font-bold">420 mV</span></div>
+          <div>眼宽 (Width): <span class="text-emerald-400 font-bold">0.72 UI</span></div>
+          <div>随机抖动 RJ: <span class="text-slate-200">1.2 ps</span></div>
+          <div>误码率 (BER): <span class="text-emerald-400">< 1E-12</span></div>
+        `;
+        buildEyeDiagramScenario();
+
+      } else if (name === 'motionRobot') {
+        panelTitle.textContent = '机械手运动防撞 (Robot)';
+        panelBadge.textContent = 'Robotic Stage';
+        controlsContainer.innerHTML = `
+          <div>
+            <div class="flex justify-between text-slate-300 mb-1">
+              <span>机械手运行速度:</span>
+              <span id="val-spd" class="font-mono text-cyan-400">${params.motionSpeed.toFixed(1)}x</span>
+            </div>
+            <input type="range" min="0.5" max="2.5" step="0.1" value="${params.motionSpeed}" class="w-full accent-cyan-500" oninput="params.motionSpeed=parseFloat(this.value); document.getElementById('val-spd').textContent=this.value+'x';" />
+          </div>
+          <div class="flex items-center space-x-2 pt-1">
+            <input type="checkbox" id="chk-safe" checked onchange="safeZoneBox.visible=this.checked;" class="accent-cyan-500" />
+            <label for="chk-safe" class="text-slate-300">显示测试座防撞包络箱 (Keep-Out)</label>
+          </div>
+        `;
+        metricsContainer.innerHTML = `
+          <div>机械手 X 坐标: <span id="tele-x" class="text-cyan-400">-8.0 mm</span></div>
+          <div>真空吸力: <span class="text-emerald-400 font-bold">-85 kPa</span></div>
+          <div>分选节拍: <span class="text-slate-200">4,200 ea/h</span></div>
+          <div>防撞状态: <span class="text-emerald-400">SAFE</span></div>
+        `;
+        buildMotionRobotScenario();
+
+      } else if (name === 'vfSurface') {
+        panelTitle.textContent = 'V-F 响应曲面 & 打标';
+        panelBadge.textContent = 'V-F Surface';
+        controlsContainer.innerHTML = `
+          <div class="space-y-2">
+            <div class="flex items-center justify-between">
+              <span class="text-slate-300">网格线 (Wireframe)</span>
+              <input type="checkbox" id="chk-vf-wire" ${params.vfWireframe ? 'checked' : ''} class="accent-cyan-500" onchange="params.vfWireframe=this.checked; if(vfWireframe) vfWireframe.visible=this.checked;" />
+            </div>
+            <div class="flex items-center justify-between">
+              <span class="text-slate-300">曲面渐变 (Colormap)</span>
+              <input type="checkbox" id="chk-vf-col" ${params.vfColormap ? 'checked' : ''} class="accent-cyan-500" onchange="params.vfColormap=this.checked; vfMesh.material.vertexColors=this.checked; vfMesh.material.color.set(this.checked?0xffffff:0x334155); vfMesh.material.needsUpdate=true;" />
+            </div>
+            <div class="flex items-center justify-between">
+              <span class="text-slate-300">显示打标旗帜 (Flags)</span>
+              <input type="checkbox" id="chk-vf-flag" ${params.vfShowFlags ? 'checked' : ''} class="accent-cyan-500" onchange="params.vfShowFlags=this.checked; flagMarkerGroup.visible=this.checked; flagMarkers.forEach(m=>m.domEl.style.display=this.checked?'flex':'none');" />
+            </div>
+          </div>
+          <button id="btn-toggle-flag-mode" class="w-full py-2 px-3 rounded bg-blue-600 text-white font-medium text-xs transition-all flex items-center justify-center gap-1.5">
+            📍 点击曲面任意处打标
+          </button>
+        `;
+        metricsContainer.innerHTML = `
+          <div>最高频点: <span class="text-rose-400 font-bold">780 MHz</span></div>
+          <div>最低工作电压: <span class="text-emerald-400">0.45 V</span></div>
+          <div>打标数量: <span class="text-cyan-400">${flagMarkers.length} Flags</span></div>
+          <div>电压裕量: <span class="text-amber-400">+150 mV</span></div>
+        `;
+        document.getElementById('btn-toggle-flag-mode').addEventListener('click', function() {
+          addFlagMode = !addFlagMode;
+          this.className = addFlagMode ? 'w-full py-2 px-3 rounded bg-emerald-600 text-white font-medium text-xs' : 'w-full py-2 px-3 rounded bg-blue-600 text-white font-medium text-xs';
+          this.textContent = addFlagMode ? '🎯 点击曲面放置旗帜 (生效中)' : '📍 点击曲面任意处打标';
+        });
+        buildVFSurfaceScenario();
+
+      } else if (name === 'warpage') {
+        panelTitle.textContent = '晶圆翘曲形貌 (Warpage)';
+        panelBadge.textContent = 'Wafer Bow/Warp';
+        controlsContainer.innerHTML = `
+          <div>
+            <div class="flex justify-between text-slate-300 mb-1">
+              <span>形变放大系数 (Z-Scale):</span>
+              <span id="val-warpScale" class="font-mono text-cyan-400">${params.warpScale}x</span>
+            </div>
+            <input type="range" min="1" max="60" value="${params.warpScale}" class="w-full accent-cyan-500" oninput="params.warpScale=parseFloat(this.value); document.getElementById('val-warpScale').textContent=this.value+'x'; updateWarpageGeometry();" />
+          </div>
+          <div>
+            <label class="text-slate-300 block mb-1">翘曲形态模式:</label>
+            <select class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1.5 text-slate-200" onchange="params.warpMode=this.value; updateWarpageGeometry();">
+              <option value="saddle">鞍形翘曲 (Saddle / Twisting)</option>
+              <option value="bowl">碗形翘曲 (Bow / Spherical)</option>
+              <option value="wavy">高阶波浪形态 (Wavy)</option>
+            </select>
+          </div>
+        `;
+        metricsContainer.innerHTML = `
+          <div>最大翘曲: <span class="text-rose-400 font-bold">+65.2 μm</span></div>
+          <div>厚度极差: <span class="text-emerald-400">1.82 μm</span></div>
+          <div>晶圆尺寸: <span class="text-slate-200">12-Inch (300mm)</span></div>
+          <div>受控状态: <span class="text-amber-400">Warning (超限)</span></div>
+        `;
+        buildWarpageScenario();
+
+      } else if (name === 'probeMark') {
+        panelTitle.textContent = '探针共面与针痕 (Probe)';
+        panelBadge.textContent = 'Probe Overdrive';
+        controlsContainer.innerHTML = `
+          <div>
+            <div class="flex justify-between text-slate-300 mb-1">
+              <span>探针过压深度 (Overdrive):</span>
+              <span id="val-od" class="font-mono text-cyan-400">${params.overdriveDepth} mil</span>
+            </div>
+            <input type="range" min="0.2" max="2.5" step="0.1" value="${params.overdriveDepth}" class="w-full accent-cyan-500" oninput="params.overdriveDepth=parseFloat(this.value); document.getElementById('val-od').textContent=this.value+' mil'; buildProbeMarkScenario();" />
+          </div>
+        `;
+        metricsContainer.innerHTML = `
+          <div>针痕最大深度: <span class="text-rose-400 font-bold">1.85 μm</span></div>
+          <div>针痕面积占比: <span class="text-emerald-400">14.2%</span></div>
+          <div>探针共面度: <span class="text-slate-200">±2.1 μm</span></div>
+          <div>探针剩余寿命: <span class="text-amber-400">85,200 次</span></div>
+        `;
+        buildProbeMarkScenario();
+
+      } else if (name === 'stacking') {
+        panelTitle.textContent = '3D IC 堆叠失效 (Chiplet)';
+        panelBadge.textContent = 'Chiplet Stacking';
+        controlsContainer.innerHTML = `
+          <div>
+            <div class="flex justify-between text-slate-300 mb-1">
+              <span>爆炸图展开距离:</span>
+              <span id="val-explode" class="font-mono text-cyan-400">${(params.explodeDistance * 100).toFixed(0)}%</span>
+            </div>
+            <input type="range" min="0" max="1" step="0.01" value="${params.explodeDistance}" class="w-full accent-cyan-500" oninput="params.explodeDistance=parseFloat(this.value); document.getElementById('val-explode').textContent=(this.value*100).toFixed(0)+'%'; applyStackingExplosion();" />
+          </div>
+          <div class="p-2 rounded bg-rose-950/40 border border-rose-800/60 text-[10px] text-slate-300">
+            HBM Layer 2 (TSV #0482): 阻抗超差 Short 报警
+          </div>
+        `;
+        metricsContainer.innerHTML = `
+          <div>堆叠层数: <span class="text-cyan-400">6 Layers</span></div>
+          <div>TSV 总数: <span class="text-slate-200">1,024</span></div>
+          <div>微凸块共面度: <span class="text-emerald-400">0.45 μm</span></div>
+          <div>测试结论: <span class="text-rose-400 font-bold">1 FAIL</span></div>
+        `;
+        buildStackingScenario();
+
+      } else if (name === 'void') {
+        panelTitle.textContent = '焊点空洞剖切 (Void)';
+        panelBadge.textContent = 'BGA / Micro-Void';
+        controlsContainer.innerHTML = `
+          <div>
+            <div class="flex justify-between text-slate-300 mb-1">
+              <span>X-Ray 剖切深度:</span>
+              <span id="val-clip" class="font-mono text-cyan-400">${params.clipOffset}</span>
+            </div>
+            <input type="range" min="-6" max="6" step="0.1" value="${params.clipOffset}" class="w-full accent-cyan-500" oninput="params.clipOffset=parseFloat(this.value); clippingPlane.constant=params.clipOffset; document.getElementById('val-clip').textContent=this.value;" />
+          </div>
+        `;
+        metricsContainer.innerHTML = `
+          <div>空洞体积占比: <span class="text-rose-400 font-bold">18.2%</span></div>
+          <div>判定标准: <span class="text-slate-200">IPC-A-610</span></div>
+          <div>判定结论: <span class="text-rose-400 font-bold">REJECT</span></div>
+          <div>缺陷尺寸: <span class="text-amber-400">Ø 32.4 μm</span></div>
+        `;
+        buildVoidScenario();
+
+      } else if (name === 'stackedLot') {
+        panelTitle.textContent = '批次穿透透视 (Lot Stack)';
+        panelBadge.textContent = 'Lot 3D Stack';
+        controlsContainer.innerHTML = `
+          <div>
+            <div class="flex justify-between text-slate-300 mb-1">
+              <span>晶圆层间距:</span>
+              <span id="val-gap" class="font-mono text-cyan-400">${params.waferGap} mm</span>
+            </div>
+            <input type="range" min="0.6" max="4.0" step="0.1" value="${params.waferGap}" class="w-full accent-cyan-500" oninput="params.waferGap=parseFloat(this.value); document.getElementById('val-gap').textContent=this.value+' mm'; updateStackedLot();" />
+          </div>
+        `;
+        metricsContainer.innerHTML = `
+          <div>批次大小: <span class="text-slate-200">10 Wafers</span></div>
+          <div>穿透重合度: <span class="text-rose-400 font-bold">100%</span></div>
+          <div>缺陷类型: <span class="text-amber-400">Cluster Fail</span></div>
+          <div>归因机台: <span class="text-cyan-400">ETCH-02</span></div>
+        `;
+        buildStackedLotScenario();
+
+      } else if (name === 'wireBond') {
+        panelTitle.textContent = '引线键合短路 (Wire Bond)';
+        panelBadge.textContent = 'Wire Loop 3D';
+        controlsContainer.innerHTML = `
+          <div class="p-2.5 rounded bg-rose-950/40 border border-rose-800/60 text-[10px] text-slate-300">
+            Wire #3 弧高下塌 (-1.8mm)，发生物理碰触短路。
+          </div>
+        `;
+        metricsContainer.innerHTML = `
+          <div>金线总数: <span class="text-slate-200">8 Wires</span></div>
+          <div>安全间距: <span class="text-rose-400 font-bold">0.02 mm</span></div>
+          <div>平均弧高: <span class="text-emerald-400">4.52 mm</span></div>
+          <div>判定结论: <span class="text-rose-400 font-bold">REJECT</span></div>
+        `;
+        buildWireBondScenario();
+
+      } else if (name === 'fabTwin') {
+        panelTitle.textContent = '车间数字孪生 (Fab Twin)';
+        panelBadge.textContent = 'Smart ATE Floor';
+        controlsContainer.innerHTML = `
+          <div class="space-y-1 text-slate-300 text-[11px]">
+            <div class="flex justify-between"><span>在线运行机台:</span><span class="text-emerald-400 font-bold">5 台</span></div>
+            <div class="flex justify-between"><span>报警停机机台:</span><span class="text-rose-400 font-bold">1 台</span></div>
+          </div>
+        `;
+        metricsContainer.innerHTML = `
+          <div>整厂 OEE: <span class="text-emerald-400 font-bold">89.4%</span></div>
+          <div>综合 UPH: <span class="text-slate-200">12,400 ea/h</span></div>
+          <div>洁净度: <span class="text-cyan-400">Class 100</span></div>
+          <div>机台报警: <span class="text-rose-400 font-bold">Jam</span></div>
+        `;
+        buildFabTwinScenario();
+      }
+    }
+
+    function animate() {
+      requestAnimationFrame(animate);
+      const time = clock.getElapsedTime();
+
+      if (currentScenario === 'focusMap' && laserSensorMesh) {
+        laserSensorMesh.position.x = Math.sin(time * 1.5) * 8;
+        laserSensorMesh.position.z = Math.cos(time * 1.2) * 8;
+      }
+
+      if (currentScenario === 'motionRobot' && robotGripper) {
+        const cycle = (time * params.motionSpeed) % 4;
+        let gx = 0, gy = 4;
+        if (cycle < 1.5) {
+          const t = cycle / 1.5; gx = -8 + t * 16; gy = 4 + Math.sin(t * Math.PI) * 2;
+        } else if (cycle < 2.0) {
+          gx = 8; gy = 4 - (cycle - 1.5) * 4;
+        } else if (cycle < 3.5) {
+          const t = (cycle - 2.0) / 1.5; gx = 8 - t * 16; gy = 2 + Math.sin(t * Math.PI) * 3;
+        } else {
+          gx = -8; gy = 4 - (cycle - 3.5) * 4;
+        }
+        robotGripper.position.set(gx, gy, 0);
+        const teleX = document.getElementById('tele-x');
+        if (teleX) teleX.textContent = `${gx.toFixed(1)} mm`;
+      }
+
+      if (currentScenario === 'vfSurface') {
+        if (params.vfAutoRotate) scene.rotation.y += 0.003;
+        else scene.rotation.y = 0;
+        updateFlagMarkersPosition();
+      } else {
+        scene.rotation.y = 0;
+      }
+
+      if (currentScenario === 'stacking' && defectBumps.length > 0) {
+        defectBumps.forEach(d => d.material.emissiveIntensity = 0.4 + Math.sin(time * 6) * 0.6);
+      }
+
+      if (currentScenario === 'wireBond' && animatedWires.length > 0) {
+        animatedWires.forEach(w => w.material.emissiveIntensity = 0.4 + Math.sin(time * 8) * 0.6);
+      }
+
+      if (currentScenario === 'fabTwin' && ohtVehicle) {
+        ohtVehicle.position.x = Math.sin(time * 0.8) * 20;
+      }
+
+      controls.update();
+      renderer.render(scene, camera);
+    }
+
+    initThree();
+    switchScenario('focusMap');
+    animate();
+  </script>
+</body>
+</html>

@@ -15,6 +15,12 @@ public partial class App : Application
     public static IServiceProvider Services { get; private set; } = null!;
     public static App Instance => (App)Current!;
 
+    public override void RegisterServices()
+    {
+        base.RegisterServices();
+        AvaloniaWebView.AvaloniaWebViewBuilder.Initialize(default);
+    }
+
     public override void Initialize()
     {
         AvaloniaXamlLoader.Load(this);
