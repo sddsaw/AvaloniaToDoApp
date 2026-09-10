@@ -172,10 +172,22 @@
         </Border>
 
         <!-- ============================================================================== -->
-        <!-- 右侧主工作区：标准路由出口 (相当于前端的 <router-view />)                            -->
-        <!-- 基于 ViewLocator 动态反射解析 CurrentPage 渲染对应视图，毫秒级即时无缝切换             -->
+        <!-- 右侧主工作区：基于 ViewLocator + ContentControl 的多通道保活路由出口                   -->
+        <!-- 保持原生 WebKit / WebGL 句柄常驻视觉树，杜绝 Detach 销毁导致的 3D 画布黑屏问题           -->
         <!-- ============================================================================== -->
-        <ContentControl Grid.Column="1" Content="{Binding CurrentPage}" />
+        <Grid Grid.Column="1">
+            <!-- 模块 1: 3D 芯片检测与上位机看板 (常驻原生通道，WebGL 零销毁、零重载、永不黑屏) -->
+            <ContentControl Content="{Binding ChipInspectVm}"
+                            IsVisible="{Binding IsModuleChipInspect}" />
+
+            <!-- 模块 2: 生产工单与待办任务 -->
+            <ContentControl Content="{Binding TodoVm}"
+                            IsVisible="{Binding IsModuleTodo}" />
+
+            <!-- 模块 3: 工业设备与运行日志 -->
+            <ContentControl Content="{Binding DeviceLogsVm}"
+                            IsVisible="{Binding IsModuleLogs}" />
+        </Grid>
 
     </Grid>
 </Window>
