@@ -1,0 +1,254 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:AvaloniaTodoApp.ViewModels"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="700"
+             x:Class="AvaloniaTodoApp.Views.TodoView"
+             x:Name="RootTodoView"
+             x:DataType="vm:TodoViewModel">
+
+    <UserControl.Styles>
+        <Style Selector="Border.card">
+            <Setter Property="Background" Value="{DynamicResource SystemControlBackgroundAltHighBrush}" />
+            <Setter Property="CornerRadius" Value="10" />
+            <Setter Property="BoxShadow" Value="0 2 8 0 #15000000" />
+        </Style>
+
+        <Style Selector="Border.task-item">
+            <Setter Property="Background" Value="{DynamicResource SystemControlBackgroundAltHighBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource SystemControlForegroundBaseLowBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="Padding" Value="12,10" />
+            <Setter Property="Margin" Value="0,0,0,8" />
+            <Setter Property="Transitions">
+                <Transitions>
+                    <DoubleTransition Property="Opacity" Duration="0:0:0.2" />
+                </Transitions>
+            </Setter>
+        </Style>
+        <Style Selector="Border.task-item:pointerover">
+            <Setter Property="BorderBrush" Value="{DynamicResource SystemAccentColor}" />
+        </Style>
+        <Style Selector="Border.task-item.completed">
+            <Setter Property="Opacity" Value="0.6" />
+        </Style>
+
+        <Style Selector="TextBlock.task-text.strike">
+            <Setter Property="TextDecorations" Value="Strikethrough" />
+            <Setter Property="Foreground" Value="{DynamicResource SystemControlForegroundBaseMediumBrush}" />
+        </Style>
+
+        <Style Selector="Button.filter-btn">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Foreground" Value="{DynamicResource SystemControlForegroundBaseMediumBrush}" />
+            <Setter Property="CornerRadius" Value="6" />
+            <Setter Property="Padding" Value="14,6" />
+            <Setter Property="FontWeight" Value="Medium" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Cursor" Value="Hand" />
+        </Style>
+        <Style Selector="Button.filter-btn:pointerover">
+            <Setter Property="Background" Value="{DynamicResource SystemControlBackgroundBaseLowBrush}" />
+        </Style>
+        <Style Selector="Button.filter-btn.active">
+            <Setter Property="Background" Value="{DynamicResource SystemAccentColor}" />
+            <Setter Property="Foreground" Value="White" />
+        </Style>
+
+        <Style Selector="Button.del-btn">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Foreground" Value="#FF6B6B" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Padding" Value="8,4" />
+            <Setter Property="CornerRadius" Value="6" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Opacity" Value="0.7" />
+        </Style>
+        <Style Selector="Button.del-btn:pointerover">
+            <Setter Property="Background" Value="#22FF0000" />
+            <Setter Property="Opacity" Value="1.0" />
+        </Style>
+    </UserControl.Styles>
+
+    <!-- 待办主视图内容 -->
+    <Grid RowDefinitions="Auto, Auto, Auto, *, Auto" Margin="32">
+        <!-- 顶部 Header 区域 (标题与状态汇总) -->
+        <Grid Grid.Row="0" ColumnDefinitions="*, Auto" Margin="0,0,0,18">
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Spacing="10">
+                <PathIcon Data="{StaticResource IconListTodo}" Width="24" Height="24"
+                          Foreground="{DynamicResource SystemAccentColor}" VerticalAlignment="Center" />
+                <TextBlock Text="待办工单与生产任务" FontSize="22" FontWeight="Bold" VerticalAlignment="Center" />
+            </StackPanel>
+
+            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                <Border Background="{DynamicResource SystemControlBackgroundBaseLowBrush}"
+                        CornerRadius="14"
+                        Padding="12,5">
+                    <TextBlock Text="{Binding StatusSummary}"
+                               FontSize="12"
+                               FontWeight="SemiBold"
+                               Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" />
+                </Border>
+            </StackPanel>
+        </Grid>
+
+        <!-- 输入框区域 (包含 Enter 键绑定与添加按钮) -->
+        <Grid Grid.Row="1" ColumnDefinitions="*, Auto" Margin="0,0,0,16">
+            <TextBox Grid.Column="0"
+                     Watermark="输入生产工单/待办事项，按回车或右侧按钮添加..."
+                     Text="{Binding NewTaskTitle, Mode=TwoWay}"
+                     IsEnabled="{Binding !IsLoading}"
+                     FontSize="14"
+                     CornerRadius="8"
+                     Padding="12,10"
+                     VerticalContentAlignment="Center">
+                <TextBox.KeyBindings>
+                    <KeyBinding Gesture="Enter" Command="{Binding AddTaskCommand}" />
+                </TextBox.KeyBindings>
+            </TextBox>
+
+            <Button Grid.Column="1"
+                    Command="{Binding AddTaskCommand}"
+                    IsEnabled="{Binding !IsLoading}"
+                    Margin="10,0,0,0"
+                    Padding="16,10"
+                    CornerRadius="8"
+                    FontWeight="SemiBold"
+                    Background="{DynamicResource SystemAccentColor}"
+                    Foreground="White"
+                    Cursor="Hand">
+                <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                    <PathIcon Data="{StaticResource IconPlus}" Width="13" Height="13" Foreground="White" VerticalAlignment="Center" />
+                    <TextBlock Text="添加" VerticalAlignment="Center" />
+                </StackPanel>
+            </Button>
+        </Grid>
+
+        <!-- 筛选器工具栏 (Tab 筛选 + 一键清空已完成) -->
+        <Grid Grid.Row="2" ColumnDefinitions="Auto, *, Auto" Margin="0,0,0,14">
+            <Border Grid.Column="0"
+                    Background="{DynamicResource SystemControlBackgroundBaseLowBrush}"
+                    CornerRadius="8"
+                    Padding="3">
+                <StackPanel Orientation="Horizontal" Spacing="2">
+                    <Button Classes="filter-btn"
+                            Classes.active="{Binding IsFilterAll}"
+                            Command="{Binding SetFilterCommand}"
+                            CommandParameter="All"
+                            Content="全部" />
+                    <Button Classes="filter-btn"
+                            Classes.active="{Binding IsFilterActive}"
+                            Command="{Binding SetFilterCommand}"
+                            CommandParameter="Active"
+                            Content="进行中" />
+                    <Button Classes="filter-btn"
+                            Classes.active="{Binding IsFilterCompleted}"
+                            Command="{Binding SetFilterCommand}"
+                            CommandParameter="Completed"
+                            Content="已完成" />
+                </StackPanel>
+            </Border>
+
+            <!-- 清除已完成按钮 -->
+            <Button Grid.Column="2"
+                    Content="清除已完成"
+                    Command="{Binding ClearCompletedCommand}"
+                    IsVisible="{Binding HasCompletedItems}"
+                    Background="Transparent"
+                    Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
+                    FontSize="12"
+                    Cursor="Hand"
+                    VerticalAlignment="Center" />
+        </Grid>
+
+        <!-- 任务列表与空状态呈现区 -->
+        <Grid Grid.Row="3">
+            <ScrollViewer IsVisible="{Binding !IsDisplayEmpty}">
+                <ItemsControl ItemsSource="{Binding DisplayTasks}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="vm:TodoItemViewModel">
+                            <Border Classes="task-item"
+                                    Classes.completed="{Binding IsCompleted}">
+                                <Grid ColumnDefinitions="Auto, *, Auto, Auto">
+                                    <CheckBox Grid.Column="0"
+                                              IsChecked="{Binding IsCompleted, Mode=TwoWay}"
+                                              VerticalAlignment="Center"
+                                              Margin="0,0,10,0" />
+
+                                    <TextBlock Grid.Column="1"
+                                               Text="{Binding Title}"
+                                               Classes="task-text"
+                                               Classes.strike="{Binding IsCompleted}"
+                                               FontSize="14"
+                                               VerticalAlignment="Center"
+                                               TextWrapping="Wrap" />
+
+                                    <TextBlock Grid.Column="2"
+                                               Text="{Binding CreatedAtText}"
+                                               FontSize="11"
+                                               Foreground="{DynamicResource SystemControlForegroundBaseMediumLowBrush}"
+                                               VerticalAlignment="Center"
+                                               Margin="12,0" />
+
+                                    <Button Grid.Column="3"
+                                            Classes="del-btn"
+                                            ToolTip.Tip="删除任务"
+                                            Command="{Binding #RootTodoView.((vm:TodoViewModel)DataContext).RemoveTaskCommand}"
+                                            CommandParameter="{Binding .}">
+                                        <PathIcon Data="{StaticResource IconTrash}" Width="13" Height="13" Foreground="#FF6B6B" />
+                                    </Button>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+
+            <Border Classes="card"
+                    IsVisible="{Binding IsDisplayEmpty}"
+                    VerticalAlignment="Center"
+                    HorizontalAlignment="Center"
+                    Padding="32"
+                    Margin="20">
+                <StackPanel HorizontalAlignment="Center" Spacing="12">
+                    <PathIcon Data="{StaticResource IconCheckCircle}" Width="44" Height="44"
+                              Foreground="{DynamicResource SystemAccentColor}" HorizontalAlignment="Center" />
+                    <TextBlock Text="暂无符合条件的工单与待办"
+                               FontSize="16"
+                               FontWeight="SemiBold"
+                               HorizontalAlignment="Center" />
+                    <TextBlock Text="设备运转平稳，或在上方添加新任务吧！"
+                               FontSize="13"
+                               Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
+                               HorizontalAlignment="Center" />
+                </StackPanel>
+            </Border>
+        </Grid>
+
+        <!-- 底部状态栏 -->
+        <Grid Grid.Row="4" ColumnDefinitions="Auto, *, Auto" Margin="0,14,0,0">
+            <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                <PathIcon Data="{StaticResource IconSave}" Width="12" Height="12"
+                          Foreground="{DynamicResource SystemControlForegroundBaseMediumLowBrush}" VerticalAlignment="Center" />
+                <TextBlock Text="{Binding StorageStatus}"
+                           FontSize="11"
+                           Foreground="{DynamicResource SystemControlForegroundBaseMediumLowBrush}" />
+            </StackPanel>
+
+            <TextBlock Grid.Column="1"
+                       Text="数据自动安全原子落盘保存"
+                       FontSize="11"
+                       Foreground="{DynamicResource SystemControlForegroundBaseMediumLowBrush}"
+                       HorizontalAlignment="Center"
+                       VerticalAlignment="Center" />
+
+            <TextBlock Grid.Column="2"
+                       Text=".NET 8 + Avalonia 11"
+                       FontSize="11"
+                       Foreground="{DynamicResource SystemControlForegroundBaseMediumLowBrush}"
+                       VerticalAlignment="Center" />
+        </Grid>
+    </Grid>
+</UserControl>

@@ -1,7 +1,6 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:AvaloniaTodoApp.ViewModels"
-        xmlns:views="using:AvaloniaTodoApp.Views"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d" d:DesignWidth="1260" d:DesignHeight="840"
@@ -38,76 +37,9 @@
             <Setter Property="BorderBrush" Value="#38bdf8" />
             <Setter Property="BorderThickness" Value="2,0,0,0" />
         </Style>
-
-        <!-- 待办基础卡片样式 -->
-        <Style Selector="Border.card">
-            <Setter Property="Background" Value="{DynamicResource SystemControlBackgroundAltHighBrush}" />
-            <Setter Property="CornerRadius" Value="10" />
-            <Setter Property="BoxShadow" Value="0 2 8 0 #15000000" />
-        </Style>
-
-        <!-- 任务卡片样式与悬浮过渡 -->
-        <Style Selector="Border.task-item">
-            <Setter Property="Background" Value="{DynamicResource SystemControlBackgroundAltHighBrush}" />
-            <Setter Property="BorderBrush" Value="{DynamicResource SystemControlForegroundBaseLowBrush}" />
-            <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="CornerRadius" Value="8" />
-            <Setter Property="Padding" Value="12,10" />
-            <Setter Property="Margin" Value="0,0,0,8" />
-            <Setter Property="Transitions">
-                <Transitions>
-                    <DoubleTransition Property="Opacity" Duration="0:0:0.2" />
-                </Transitions>
-            </Setter>
-        </Style>
-        <Style Selector="Border.task-item:pointerover">
-            <Setter Property="BorderBrush" Value="{DynamicResource SystemAccentColor}" />
-        </Style>
-        <Style Selector="Border.task-item.completed">
-            <Setter Property="Opacity" Value="0.6" />
-        </Style>
-
-        <!-- 任务文本完成时的删除线与透明度 -->
-        <Style Selector="TextBlock.task-text.strike">
-            <Setter Property="TextDecorations" Value="Strikethrough" />
-            <Setter Property="Foreground" Value="{DynamicResource SystemControlForegroundBaseMediumBrush}" />
-        </Style>
-
-        <!-- 筛选 Tab 按钮样式 -->
-        <Style Selector="Button.filter-btn">
-            <Setter Property="Background" Value="Transparent" />
-            <Setter Property="Foreground" Value="{DynamicResource SystemControlForegroundBaseMediumBrush}" />
-            <Setter Property="CornerRadius" Value="6" />
-            <Setter Property="Padding" Value="14,6" />
-            <Setter Property="FontWeight" Value="Medium" />
-            <Setter Property="BorderThickness" Value="0" />
-            <Setter Property="Cursor" Value="Hand" />
-        </Style>
-        <Style Selector="Button.filter-btn:pointerover">
-            <Setter Property="Background" Value="{DynamicResource SystemControlBackgroundBaseLowBrush}" />
-        </Style>
-        <Style Selector="Button.filter-btn.active">
-            <Setter Property="Background" Value="{DynamicResource SystemAccentColor}" />
-            <Setter Property="Foreground" Value="White" />
-        </Style>
-
-        <!-- 垃圾桶删除按钮样式 -->
-        <Style Selector="Button.del-btn">
-            <Setter Property="Background" Value="Transparent" />
-            <Setter Property="Foreground" Value="#FF6B6B" />
-            <Setter Property="BorderThickness" Value="0" />
-            <Setter Property="Padding" Value="8,4" />
-            <Setter Property="CornerRadius" Value="6" />
-            <Setter Property="Cursor" Value="Hand" />
-            <Setter Property="Opacity" Value="0.7" />
-        </Style>
-        <Style Selector="Button.del-btn:pointerover">
-            <Setter Property="Background" Value="#22FF0000" />
-            <Setter Property="Opacity" Value="1.0" />
-        </Style>
     </Window.Styles>
 
-    <!-- 主窗口两栏布局：左侧精美侧边栏 (220px) + 右侧多模块工作区 (*) -->
+    <!-- 主窗口两栏布局：左侧精美侧边栏 (224px) + 右侧基于 ViewLocator 的路由出口 (*) -->
     <Grid ColumnDefinitions="224, *">
 
         <!-- ============================================================================== -->
@@ -147,7 +79,7 @@
                     <Separator Background="#1e293b" Height="1" Margin="0,4,0,0" />
                 </StackPanel>
 
-                <!-- 2. 中部核心业务导航菜单 -->
+                <!-- 2. 中部核心业务导航菜单 (触发路由切换指令) -->
                 <StackPanel Grid.Row="1" Spacing="6">
                     <TextBlock Text="业务与监测模块" FontSize="10" FontWeight="SemiBold"
                                Foreground="#64748b" Margin="4,0,0,6" LetterSpacing="0.5" />
@@ -159,8 +91,7 @@
                             CommandParameter="ChipInspect">
                         <Grid ColumnDefinitions="Auto, *">
                             <PathIcon Grid.Column="0" Data="{StaticResource IconChip3D}" Width="16" Height="16"
-                                      Foreground="{Binding IsModuleChipInspect, Converter={x:Null}}"
-                                      VerticalAlignment="Center" />
+                                      Foreground="#38bdf8" VerticalAlignment="Center" />
                             <StackPanel Grid.Column="1" Margin="10,0,0,0" VerticalAlignment="Center">
                                 <TextBlock Text="3D 芯片检测" FontSize="13" FontWeight="SemiBold"
                                            Foreground="#f1f5f9" />
@@ -240,269 +171,14 @@
         </Border>
 
         <!-- ============================================================================== -->
-        <!-- 右侧主工作区 (动态切换视图模块)                                                   -->
+        <!-- 右侧主工作区：标准路由出口 (相当于前端的 <router-view />)                            -->
+        <!-- 基于 ViewLocator 动态反射解析 CurrentPage 渲染对应视图，并支持平滑淡入动效           -->
         <!-- ============================================================================== -->
-        <Grid Grid.Column="1">
+        <TransitioningContentControl Grid.Column="1" Content="{Binding CurrentPage}">
+            <TransitioningContentControl.PageTransition>
+                <CrossFade Duration="0:0:0.2" />
+            </TransitioningContentControl.PageTransition>
+        </TransitioningContentControl>
 
-            <!-- 模块 1：3D 芯片全业务看板 (Three.js WebGL 混合视图) -->
-            <views:ChipInspectView IsVisible="{Binding IsModuleChipInspect}" />
-
-            <!-- 模块 2：生产待办任务工单视图 -->
-            <Grid IsVisible="{Binding IsModuleTodo}" RowDefinitions="Auto, Auto, Auto, *, Auto" Margin="32">
-                <!-- 顶部 Header 区域 (标题与状态汇总) -->
-                <Grid Grid.Row="0" ColumnDefinitions="*, Auto" Margin="0,0,0,18">
-                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Spacing="10">
-                        <PathIcon Data="{StaticResource IconListTodo}" Width="24" Height="24"
-                                  Foreground="{DynamicResource SystemAccentColor}" VerticalAlignment="Center" />
-                        <TextBlock Text="待办工单与生产任务" FontSize="22" FontWeight="Bold" VerticalAlignment="Center" />
-                    </StackPanel>
-
-                    <!-- 状态统计徽章 -->
-                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
-                        <Border Background="{DynamicResource SystemControlBackgroundBaseLowBrush}"
-                                CornerRadius="14"
-                                Padding="12,5">
-                            <TextBlock Text="{Binding StatusSummary}"
-                                       FontSize="12"
-                                       FontWeight="SemiBold"
-                                       Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" />
-                        </Border>
-                    </StackPanel>
-                </Grid>
-
-                <!-- 输入框区域 (包含 Enter 键绑定与添加按钮) -->
-                <Grid Grid.Row="1" ColumnDefinitions="*, Auto" Margin="0,0,0,16">
-                    <TextBox Grid.Column="0"
-                             Watermark="输入生产工单/待办事项，按回车或右侧按钮添加..."
-                             Text="{Binding NewTaskTitle, Mode=TwoWay}"
-                             IsEnabled="{Binding !IsLoading}"
-                             FontSize="14"
-                             CornerRadius="8"
-                             Padding="12,10"
-                             VerticalContentAlignment="Center">
-                        <TextBox.KeyBindings>
-                            <KeyBinding Gesture="Enter" Command="{Binding AddTaskCommand}" />
-                        </TextBox.KeyBindings>
-                    </TextBox>
-
-                    <Button Grid.Column="1"
-                            Command="{Binding AddTaskCommand}"
-                            IsEnabled="{Binding !IsLoading}"
-                            Margin="10,0,0,0"
-                            Padding="16,10"
-                            CornerRadius="8"
-                            FontWeight="SemiBold"
-                            Background="{DynamicResource SystemAccentColor}"
-                            Foreground="White"
-                            Cursor="Hand">
-                        <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
-                            <PathIcon Data="{StaticResource IconPlus}" Width="13" Height="13" Foreground="White" VerticalAlignment="Center" />
-                            <TextBlock Text="添加" VerticalAlignment="Center" />
-                        </StackPanel>
-                    </Button>
-                </Grid>
-
-                <!-- 筛选器工具栏 (Tab 筛选 + 一键清空已完成) -->
-                <Grid Grid.Row="2" ColumnDefinitions="Auto, *, Auto" Margin="0,0,0,14">
-                    <Border Grid.Column="0"
-                            Background="{DynamicResource SystemControlBackgroundBaseLowBrush}"
-                            CornerRadius="8"
-                            Padding="3">
-                        <StackPanel Orientation="Horizontal" Spacing="2">
-                            <Button Classes="filter-btn"
-                                    Classes.active="{Binding IsFilterAll}"
-                                    Command="{Binding SetFilterCommand}"
-                                    CommandParameter="All"
-                                    Content="全部" />
-                            <Button Classes="filter-btn"
-                                    Classes.active="{Binding IsFilterActive}"
-                                    Command="{Binding SetFilterCommand}"
-                                    CommandParameter="Active"
-                                    Content="进行中" />
-                            <Button Classes="filter-btn"
-                                    Classes.active="{Binding IsFilterCompleted}"
-                                    Command="{Binding SetFilterCommand}"
-                                    CommandParameter="Completed"
-                                    Content="已完成" />
-                        </StackPanel>
-                    </Border>
-
-                    <!-- 清除已完成按钮 -->
-                    <Button Grid.Column="2"
-                            Content="清除已完成"
-                            Command="{Binding ClearCompletedCommand}"
-                            IsVisible="{Binding HasCompletedItems}"
-                            Background="Transparent"
-                            Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
-                            FontSize="12"
-                            Cursor="Hand"
-                            VerticalAlignment="Center" />
-                </Grid>
-
-                <!-- 任务列表与空状态呈现区 -->
-                <Grid Grid.Row="3">
-                    <ScrollViewer IsVisible="{Binding !IsDisplayEmpty}">
-                        <ItemsControl ItemsSource="{Binding DisplayTasks}">
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate x:DataType="vm:TodoItemViewModel">
-                                    <Border Classes="task-item"
-                                            Classes.completed="{Binding IsCompleted}">
-                                        <Grid ColumnDefinitions="Auto, *, Auto, Auto">
-                                            <CheckBox Grid.Column="0"
-                                                      IsChecked="{Binding IsCompleted, Mode=TwoWay}"
-                                                      VerticalAlignment="Center"
-                                                      Margin="0,0,10,0" />
-
-                                            <TextBlock Grid.Column="1"
-                                                       Text="{Binding Title}"
-                                                       Classes="task-text"
-                                                       Classes.strike="{Binding IsCompleted}"
-                                                       FontSize="14"
-                                                       VerticalAlignment="Center"
-                                                       TextWrapping="Wrap" />
-
-                                            <TextBlock Grid.Column="2"
-                                                       Text="{Binding CreatedAtText}"
-                                                       FontSize="11"
-                                                       Foreground="{DynamicResource SystemControlForegroundBaseMediumLowBrush}"
-                                                       VerticalAlignment="Center"
-                                                       Margin="12,0" />
-
-                                            <Button Grid.Column="3"
-                                                    Classes="del-btn"
-                                                    ToolTip.Tip="删除任务"
-                                                    Command="{Binding #RootWindow.((vm:MainWindowViewModel)DataContext).RemoveTaskCommand}"
-                                                    CommandParameter="{Binding .}">
-                                                <PathIcon Data="{StaticResource IconTrash}" Width="13" Height="13" Foreground="#FF6B6B" />
-                                            </Button>
-                                        </Grid>
-                                    </Border>
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
-                    </ScrollViewer>
-
-                    <Border Classes="card"
-                            IsVisible="{Binding IsDisplayEmpty}"
-                            VerticalAlignment="Center"
-                            HorizontalAlignment="Center"
-                            Padding="32"
-                            Margin="20">
-                        <StackPanel HorizontalAlignment="Center" Spacing="12">
-                            <PathIcon Data="{StaticResource IconCheckCircle}" Width="44" Height="44"
-                                      Foreground="{DynamicResource SystemAccentColor}" HorizontalAlignment="Center" />
-                            <TextBlock Text="暂无符合条件的工单与待办"
-                                       FontSize="16"
-                                       FontWeight="SemiBold"
-                                       HorizontalAlignment="Center" />
-                            <TextBlock Text="设备运转平稳，或在上方添加新任务吧！"
-                                       FontSize="13"
-                                       Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
-                                       HorizontalAlignment="Center" />
-                        </StackPanel>
-                    </Border>
-                </Grid>
-
-                <!-- 底部状态栏 -->
-                <Grid Grid.Row="4" ColumnDefinitions="Auto, *, Auto" Margin="0,14,0,0">
-                    <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
-                        <PathIcon Data="{StaticResource IconSave}" Width="12" Height="12"
-                                  Foreground="{DynamicResource SystemControlForegroundBaseMediumLowBrush}" VerticalAlignment="Center" />
-                        <TextBlock Text="{Binding StorageStatus}"
-                                   FontSize="11"
-                                   Foreground="{DynamicResource SystemControlForegroundBaseMediumLowBrush}" />
-                    </StackPanel>
-
-                    <TextBlock Grid.Column="1"
-                               Text="数据自动安全原子落盘保存"
-                               FontSize="11"
-                               Foreground="{DynamicResource SystemControlForegroundBaseMediumLowBrush}"
-                               HorizontalAlignment="Center"
-                               VerticalAlignment="Center" />
-
-                    <TextBlock Grid.Column="2"
-                               Text=".NET 8 + Avalonia 11"
-                               FontSize="11"
-                               Foreground="{DynamicResource SystemControlForegroundBaseMediumLowBrush}"
-                               VerticalAlignment="Center" />
-                </Grid>
-            </Grid>
-
-            <!-- 模块 3：工业设备运行与日志监控视图 -->
-            <Grid IsVisible="{Binding IsModuleLogs}" Margin="32">
-                <ScrollViewer>
-                    <StackPanel Spacing="16" MaxWidth="800" HorizontalAlignment="Left">
-                        <!-- 标题 -->
-                        <StackPanel Orientation="Horizontal" Spacing="10" Margin="0,0,0,6">
-                            <PathIcon Data="{StaticResource IconTerminal}" Width="24" Height="24"
-                                      Foreground="#a78bfa" VerticalAlignment="Center" />
-                            <TextBlock Text="工业级运行与故障日志" FontSize="22" FontWeight="Bold" VerticalAlignment="Center" />
-                        </StackPanel>
-
-                        <!-- 遥测卡片 1 -->
-                        <Border Classes="card" Padding="20">
-                            <StackPanel Spacing="12">
-                                <Grid ColumnDefinitions="*, Auto">
-                                    <StackPanel Spacing="4">
-                                        <TextBlock Text="Serilog 工业日志基础设施" FontWeight="Bold" FontSize="15" />
-                                        <TextBlock Text="毫秒级按天自动滚动归档，全生命周期崩溃防御与降级防护已就绪。"
-                                                   FontSize="12" Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" />
-                                    </StackPanel>
-                                    <Button Grid.Column="1"
-                                            Command="{Binding OpenLogFolderCommand}"
-                                            Background="{DynamicResource SystemAccentColor}"
-                                            Foreground="White"
-                                            Padding="14,8"
-                                            CornerRadius="6"
-                                            Cursor="Hand">
-                                        <StackPanel Orientation="Horizontal" Spacing="6">
-                                            <PathIcon Data="{StaticResource IconFolder}" Width="13" Height="13" Foreground="White" VerticalAlignment="Center" />
-                                            <TextBlock Text="打开日志文件夹" VerticalAlignment="Center" />
-                                        </StackPanel>
-                                    </Button>
-                                </Grid>
-
-                                <Separator Background="{DynamicResource SystemControlForegroundBaseLowBrush}" Height="1" />
-
-                                <Grid ColumnDefinitions="*, *, *">
-                                    <Border Background="{DynamicResource SystemControlBackgroundBaseLowBrush}" CornerRadius="8" Padding="14,10" Margin="0,0,8,0">
-                                        <StackPanel Spacing="4">
-                                            <TextBlock Text="日志写入模式" FontSize="11" Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" />
-                                            <TextBlock Text="Console + File 双写" FontSize="13" FontWeight="Bold" Foreground="#10b981" />
-                                        </StackPanel>
-                                    </Border>
-                                    <Border Background="{DynamicResource SystemControlBackgroundBaseLowBrush}" CornerRadius="8" Padding="14,10" Margin="4,0,4,0">
-                                        <StackPanel Spacing="4">
-                                            <TextBlock Text="日志保留天数" FontSize="11" Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" />
-                                            <TextBlock Text="31 天保留循环" FontSize="13" FontWeight="Bold" Foreground="#38bdf8" />
-                                        </StackPanel>
-                                    </Border>
-                                    <Border Background="{DynamicResource SystemControlBackgroundBaseLowBrush}" CornerRadius="8" Padding="14,10" Margin="8,0,0,0">
-                                        <StackPanel Spacing="4">
-                                            <TextBlock Text="防崩溃兜底" FontSize="11" Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" />
-                                            <TextBlock Text="AppDomain + Task 拦截" FontSize="13" FontWeight="Bold" Foreground="#a78bfa" />
-                                        </StackPanel>
-                                    </Border>
-                                </Grid>
-                            </StackPanel>
-                        </Border>
-
-                        <!-- 遥测卡片 2: 存储状态 -->
-                        <Border Classes="card" Padding="20">
-                            <StackPanel Spacing="10">
-                                <TextBlock Text="本地存储安全架构" FontWeight="Bold" FontSize="15" />
-                                <TextBlock Text="• 原子替换写入：数据保存时先写入临时文件 (.tmp)，成功后再原子重命名，杜绝非正常关机截断。"
-                                           FontSize="12" Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" />
-                                <TextBlock Text="• 合并式异步写盘：高频任务修改自动合并，最后一次最新快照确保安全落盘。"
-                                           FontSize="12" Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" />
-                                <TextBlock Text="• 损坏数据防护：解析异常时自动备份为 .corrupted 隔离文件，防止坏数据静默吞没。"
-                                           FontSize="12" Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" />
-                            </StackPanel>
-                        </Border>
-                    </StackPanel>
-                </ScrollViewer>
-            </Grid>
-
-        </Grid>
     </Grid>
 </Window>

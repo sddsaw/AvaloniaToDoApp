@@ -1,0 +1,99 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:AvaloniaTodoApp.ViewModels"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="700"
+             x:Class="AvaloniaTodoApp.Views.DeviceLogsView"
+             x:DataType="vm:DeviceLogsViewModel">
+
+    <UserControl.Styles>
+        <Style Selector="Border.card">
+            <Setter Property="Background" Value="{DynamicResource SystemControlBackgroundAltHighBrush}" />
+            <Setter Property="CornerRadius" Value="10" />
+            <Setter Property="BoxShadow" Value="0 2 8 0 #15000000" />
+        </Style>
+    </UserControl.Styles>
+
+    <Grid Margin="32">
+        <ScrollViewer>
+            <StackPanel Spacing="16" MaxWidth="800" HorizontalAlignment="Left">
+                <!-- 标题 -->
+                <StackPanel Orientation="Horizontal" Spacing="10" Margin="0,0,0,6">
+                    <PathIcon Data="{StaticResource IconTerminal}" Width="24" Height="24"
+                              Foreground="#a78bfa" VerticalAlignment="Center" />
+                    <TextBlock Text="工业级运行与故障日志" FontSize="22" FontWeight="Bold" VerticalAlignment="Center" />
+                </StackPanel>
+
+                <!-- 遥测卡片 1 -->
+                <Border Classes="card" Padding="20">
+                    <StackPanel Spacing="12">
+                        <Grid ColumnDefinitions="*, Auto">
+                            <StackPanel Spacing="4">
+                                <TextBlock Text="Serilog 工业日志基础设施" FontWeight="Bold" FontSize="15" />
+                                <TextBlock Text="毫秒级按天自动滚动归档，全生命周期崩溃防御与降级防护已就绪。"
+                                           FontSize="12" Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" />
+                            </StackPanel>
+                            <Button Grid.Column="1"
+                                    Command="{Binding OpenLogFolderCommand}"
+                                    Background="{DynamicResource SystemAccentColor}"
+                                    Foreground="White"
+                                    Padding="14,8"
+                                    CornerRadius="6"
+                                    Cursor="Hand">
+                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                    <PathIcon Data="{StaticResource IconFolder}" Width="13" Height="13" Foreground="White" VerticalAlignment="Center" />
+                                    <TextBlock Text="打开日志文件夹" VerticalAlignment="Center" />
+                                </StackPanel>
+                            </Button>
+                        </Grid>
+
+                        <Separator Background="{DynamicResource SystemControlForegroundBaseLowBrush}" Height="1" />
+
+                        <Grid ColumnDefinitions="*, *, *">
+                            <Border Background="{DynamicResource SystemControlBackgroundBaseLowBrush}" CornerRadius="8" Padding="14,10" Margin="0,0,8,0">
+                                <StackPanel Spacing="4">
+                                    <TextBlock Text="日志写入模式" FontSize="11" Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" />
+                                    <TextBlock Text="{Binding LogMode}" FontSize="13" FontWeight="Bold" Foreground="#10b981" />
+                                </StackPanel>
+                            </Border>
+                            <Border Background="{DynamicResource SystemControlBackgroundBaseLowBrush}" CornerRadius="8" Padding="14,10" Margin="4,0,4,0">
+                                <StackPanel Spacing="4">
+                                    <TextBlock Text="日志保留周期" FontSize="11" Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" />
+                                    <TextBlock Text="31 天循环滚动" FontSize="13" FontWeight="Bold" Foreground="#38bdf8" />
+                                </StackPanel>
+                            </Border>
+                            <Border Background="{DynamicResource SystemControlBackgroundBaseLowBrush}" CornerRadius="8" Padding="14,10" Margin="8,0,0,0">
+                                <StackPanel Spacing="4">
+                                    <TextBlock Text="防崩溃兜底" FontSize="11" Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" />
+                                    <TextBlock Text="AppDomain + Task 拦截" FontSize="13" FontWeight="Bold" Foreground="#a78bfa" />
+                                </StackPanel>
+                            </Border>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+
+                <!-- 遥测卡片 2: 存储状态 -->
+                <Border Classes="card" Padding="20">
+                    <StackPanel Spacing="10">
+                        <TextBlock Text="本地存储安全架构" FontWeight="Bold" FontSize="15" />
+                        <TextBlock Text="• 原子替换写入：数据保存时先写入临时文件 (.tmp)，成功后再原子重命名，杜绝非正常关机截断。"
+                                   FontSize="12" Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" />
+                        <TextBlock Text="• 合并式异步写盘：高频任务修改自动合并，最后一次最新快照确保安全落盘。"
+                                   FontSize="12" Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" />
+                        <TextBlock Text="• 损坏数据防护：解析异常时自动备份为 .corrupted 隔离文件，防止坏数据静默吞没。"
+                                   FontSize="12" Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" />
+                    </StackPanel>
+                </Border>
+
+                <!-- 遥测卡片 3: 存储与日志路径 -->
+                <Border Classes="card" Padding="20">
+                    <StackPanel Spacing="8">
+                        <TextBlock Text="当前日志目录绝对物理路径:" FontSize="12" Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" />
+                        <TextBox Text="{Binding LogFolderPath}" IsReadOnly="True" FontSize="11" />
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</UserControl>
