@@ -65,11 +65,16 @@ public partial class App : Application
 
     private void ConfigureServices(IServiceCollection services)
     {
-        // 注册核心基础设施服务 (单例模式)
+        // 1. 注册核心基础设施服务 (单例模式)
         services.AddSingleton<ITodoStorageService, JsonTodoStorageService>();
         services.AddSingleton<IUpdateService, UpdateService>();
 
-        // 注册 ViewModels (瞬态模式)
+        // 2. 注册业务子模块 ViewModels (单例模式：全局保活，切页无缝维持状态)
+        services.AddSingleton<ChipInspectViewModel>();
+        services.AddSingleton<TodoViewModel>();
+        services.AddSingleton<DeviceLogsViewModel>();
+
+        // 3. 注册主外壳与弹窗 ViewModels
         services.AddTransient<MainWindowViewModel>();
         services.AddTransient<AboutUpdateViewModel>();
     }

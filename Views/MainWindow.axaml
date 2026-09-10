@@ -11,6 +11,7 @@
         Icon="avares://AvaloniaTodoApp/Assets/app-icon.png"
         Width="1280" Height="840"
         MinWidth="1000" MinHeight="680"
+        Background="#0b1120"
         WindowStartupLocation="CenterScreen">
 
     <!-- 全局精美组件样式与微动效过渡 -->
@@ -111,7 +112,7 @@
                             <StackPanel Grid.Column="1" Margin="10,0,0,0" VerticalAlignment="Center">
                                 <TextBlock Text="待办任务工单" FontSize="13" FontWeight="SemiBold"
                                            Foreground="#f1f5f9" />
-                                <TextBlock Text="{Binding StatusSummary}" FontSize="10" Foreground="#64748b" TextTrimming="CharacterEllipsis" />
+                                <TextBlock Text="{Binding TodoVm.StatusSummary}" FontSize="10" Foreground="#64748b" TextTrimming="CharacterEllipsis" />
                             </StackPanel>
                         </Grid>
                     </Button>

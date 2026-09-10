@@ -1,5 +1,4 @@
 using System;
-using System.Collections.ObjectModel;
 using System.Threading.Tasks;
 using AvaloniaTodoApp.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -7,30 +6,36 @@ using CommunityToolkit.Mvvm.Input;
 
 namespace AvaloniaTodoApp.ViewModels;
 
+/// <summary>
+/// 侧边栏导航业务模块枚举
+/// </summary>
 public enum NavModule
 {
     ChipInspect, // 3D 芯片检测与上位机看板
-    Todo,        // 生产待办工单
-    Logs         // 工业设备日志
+    Todo,        // 生产工单与待办任务
+    Logs         // 工业设备与运行日志
 }
 
 /// <summary>
-/// 主界面路由宿主与外壳 ViewModel (类似 Vue 的 Layout/AppShell 路由控制器)
-/// 负责全局侧边栏导航、当前路由页面状态驱动，通过 ViewLocator + ContentControl 实现路由映射
+/// 主界面宿主与路由外壳 ViewModel (类似 Vue 的 AppShell / RouterLayout 控制器)
+/// 负责全局侧边栏导航、生命周期协调，通过 ViewLocator + ContentControl 实现路由映射
 /// </summary>
 public partial class MainWindowViewModel : ViewModelBase
 {
-    // 子模块单例 ViewModel（保活实例）
+    // 子模块单例 ViewModel (由 DI 容器统一注入，保持内存活)
     public ChipInspectViewModel ChipInspectVm { get; }
     public TodoViewModel TodoVm { get; }
     public DeviceLogsViewModel DeviceLogsVm { get; }
 
-    // 【路由出口绑定】当前激活渲染的子页面 ViewModel（等价于前端路由的 CurrentRoute / Component）
+    private readonly IUpdateService _updateService;
+
+    // 【路由出口绑定】当前激活渲染的子页面 ViewModel
     [ObservableProperty]
     private ViewModelBase _currentPage;
 
-    // 当前导航枚举
+    // 当前导航枚举，派生导航按钮激活态 (通过 NotifyPropertyChangedFor 自动同步)
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsModuleChipInspect), nameof(IsModuleTodo), nameof(IsModuleLogs))]
     private NavModule _currentModule = NavModule.ChipInspect;
 
     public bool IsModuleChipInspect => CurrentModule == NavModule.ChipInspect;
@@ -41,17 +46,18 @@ public partial class MainWindowViewModel : ViewModelBase
 
     public event Action? RequestOpenAbout;
 
-    private readonly IUpdateService _updateService;
-
-    public MainWindowViewModel(ITodoStorageService storageService, IUpdateService updateService)
+    public MainWindowViewModel(
+        ChipInspectViewModel chipInspectVm,
+        TodoViewModel todoVm,
+        DeviceLogsViewModel deviceLogsVm,
+        IUpdateService updateService)
     {
+        ChipInspectVm = chipInspectVm;
+        TodoVm = todoVm;
+        DeviceLogsVm = deviceLogsVm;
         _updateService = updateService;
 
-        ChipInspectVm = new ChipInspectViewModel();
-        TodoVm = new TodoViewModel(storageService, updateService);
-        DeviceLogsVm = new DeviceLogsViewModel();
-
-        // 默认进入 3D 芯片全业务检测看板
+        // 默认进入 3D 芯片检测看板
         _currentPage = ChipInspectVm;
     }
 
@@ -61,7 +67,7 @@ public partial class MainWindowViewModel : ViewModelBase
     [RelayCommand]
     private void SwitchModule(string moduleName)
     {
-        if (Enum.TryParse<NavModule>(moduleName, true, out var mod))
+        if (Enum.TryParse<NavModule>(moduleName, true, out var mod) && mod != CurrentModule)
         {
             CurrentModule = mod;
             CurrentPage = mod switch
@@ -71,9 +77,6 @@ public partial class MainWindowViewModel : ViewModelBase
                 NavModule.Logs => DeviceLogsVm,
                 _ => ChipInspectVm
             };
-            OnPropertyChanged(nameof(IsModuleChipInspect));
-            OnPropertyChanged(nameof(IsModuleTodo));
-            OnPropertyChanged(nameof(IsModuleLogs));
             Serilog.Log.Information("[Router] 视图路由导航至: {Page}", CurrentPage.GetType().Name);
         }
     }
@@ -90,31 +93,17 @@ public partial class MainWindowViewModel : ViewModelBase
         LogHelper.OpenLogFolder();
     }
 
-    #region 单元测试与向后兼容透传委托 (Forwarding to TodoVm)
+    #region 生命周期托管 (Lifecycle)
 
+    /// <summary>
+    /// 窗口呈现后的异步初始化引导
+    /// </summary>
     public Task InitializeAsync() => TodoVm.InitializeAsync();
+
+    /// <summary>
+    /// 窗口关闭前的脏数据安全落盘
+    /// </summary>
     public Task FlushAsync() => TodoVm.FlushAsync();
-
-    public ObservableCollection<TodoItemViewModel> DisplayTasks => TodoVm.DisplayTasks;
-
-    public string NewTaskTitle
-    {
-        get => TodoVm.NewTaskTitle;
-        set => TodoVm.NewTaskTitle = value;
-    }
-
-    public TodoFilter CurrentFilter => TodoVm.CurrentFilter;
-    public bool IsLoading => TodoVm.IsLoading;
-    public int TotalCount => TodoVm.TotalCount;
-    public int RemainingCount => TodoVm.RemainingCount;
-    public int CompletedCount => TodoVm.CompletedCount;
-    public string StatusSummary => TodoVm.StatusSummary;
-    public string StorageStatus => TodoVm.StorageStatus;
-
-    public IRelayCommand AddTaskCommand => TodoVm.AddTaskCommand;
-    public IRelayCommand<TodoItemViewModel?> RemoveTaskCommand => TodoVm.RemoveTaskCommand;
-    public IRelayCommand<string> SetFilterCommand => TodoVm.SetFilterCommand;
-    public IRelayCommand ClearCompletedCommand => TodoVm.ClearCompletedCommand;
 
     #endregion
 }
