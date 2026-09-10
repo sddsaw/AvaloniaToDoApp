@@ -172,13 +172,9 @@
 
         <!-- ============================================================================== -->
         <!-- 右侧主工作区：标准路由出口 (相当于前端的 <router-view />)                            -->
-        <!-- 基于 ViewLocator 动态反射解析 CurrentPage 渲染对应视图，并支持平滑淡入动效           -->
+        <!-- 基于 ViewLocator 动态反射解析 CurrentPage 渲染对应视图，毫秒级即时无缝切换             -->
         <!-- ============================================================================== -->
-        <TransitioningContentControl Grid.Column="1" Content="{Binding CurrentPage}">
-            <TransitioningContentControl.PageTransition>
-                <CrossFade Duration="0:0:0.2" />
-            </TransitioningContentControl.PageTransition>
-        </TransitioningContentControl>
+        <ContentControl Grid.Column="1" Content="{Binding CurrentPage}" />
 
     </Grid>
 </Window>
