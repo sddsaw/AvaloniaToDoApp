@@ -16,27 +16,52 @@
 
     <!-- 全局精美组件样式与微动效过渡 -->
     <Window.Styles>
-        <!-- 侧边栏导航项基础样式 -->
+        <!-- 侧边栏导航项基础样式：始终预设 3px 左边框与透明画刷，彻底杜绝激活时的布局抖动 (0 像素位移) -->
         <Style Selector="Button.nav-item">
             <Setter Property="Background" Value="Transparent" />
-            <Setter Property="BorderThickness" Value="0" />
-            <Setter Property="Padding" Value="12,10" />
+            <Setter Property="BorderBrush" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="3,0,0,0" />
+            <Setter Property="Padding" Value="11,10,12,10" />
             <Setter Property="CornerRadius" Value="8" />
             <Setter Property="HorizontalAlignment" Value="Stretch" />
             <Setter Property="Cursor" Value="Hand" />
-            <Setter Property="Transitions">
-                <Transitions>
-                    <BrushTransition Property="Background" Duration="0:0:0.18" />
-                </Transitions>
-            </Setter>
         </Style>
-        <Style Selector="Button.nav-item:pointerover">
-            <Setter Property="Background" Value="#17223b" />
+
+        <!-- 覆盖 FluentTheme 默认模板零件 ContentPresenter，彻底消除鼠标点击时的原生半透明白闪 (White Flash) -->
+        <Style Selector="Button.nav-item:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="#152138" />
+            <Setter Property="BorderBrush" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="3,0,0,0" />
         </Style>
-        <Style Selector="Button.nav-item.active">
+        <Style Selector="Button.nav-item:pressed /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="#0e1829" />
+            <Setter Property="BorderBrush" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="3,0,0,0" />
+        </Style>
+
+        <!-- 激活项样式：点亮左侧 3px 科技天蓝光条与高亮底色，尺寸无任何跳动 -->
+        <Style Selector="Button.nav-item.active /template/ ContentPresenter#PART_ContentPresenter">
             <Setter Property="Background" Value="#132b45" />
             <Setter Property="BorderBrush" Value="#38bdf8" />
-            <Setter Property="BorderThickness" Value="2,0,0,0" />
+            <Setter Property="BorderThickness" Value="3,0,0,0" />
+        </Style>
+        <Style Selector="Button.nav-item.active:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="#173454" />
+            <Setter Property="BorderBrush" Value="#38bdf8" />
+            <Setter Property="BorderThickness" Value="3,0,0,0" />
+        </Style>
+        <Style Selector="Button.nav-item.active:pressed /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="#0f2238" />
+            <Setter Property="BorderBrush" Value="#38bdf8" />
+            <Setter Property="BorderThickness" Value="3,0,0,0" />
+        </Style>
+
+        <!-- 关于按钮静默样式 -->
+        <Style Selector="Button.about-btn:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="#152138" />
+        </Style>
+        <Style Selector="Button.about-btn:pressed /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="#0e1829" />
         </Style>
     </Window.Styles>
 
@@ -151,7 +176,8 @@
                     </Border>
 
                     <!-- 关于与版本更新按钮 -->
-                    <Button Command="{Binding OpenAboutCommand}"
+                    <Button Classes="about-btn"
+                            Command="{Binding OpenAboutCommand}"
                             Background="Transparent"
                             BorderThickness="0"
                             Padding="8,6"
@@ -175,7 +201,7 @@
         <!-- 右侧主工作区：基于 ViewLocator + ContentControl 的多通道保活路由出口                   -->
         <!-- 保持原生 WebKit / WebGL 句柄常驻视觉树，杜绝 Detach 销毁导致的 3D 画布黑屏问题           -->
         <!-- ============================================================================== -->
-        <Grid Grid.Column="1">
+        <Grid Grid.Column="1" Background="#070a12">
             <!-- 模块 1: 3D 芯片检测与上位机看板 (常驻原生通道，WebGL 零销毁、零重载、永不黑屏) -->
             <ContentControl Content="{Binding ChipInspectVm}"
                             IsVisible="{Binding IsModuleChipInspect}" />
