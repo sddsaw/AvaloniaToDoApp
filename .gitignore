@@ -1,0 +1,59 @@
+## ==============================================================================
+## .NET / C# / Avalonia 官方标准 .gitignore 忽略规则
+## ==============================================================================
+
+# 1. 编译与打包输出产物 (Build & Publish Output)
+[Bb]in/
+[Oo]bj/
+dist/
+publish/
+[Ll]og/
+[Ll]ogs/
+
+# 2. Visual Studio / JetBrains Rider 临时与用户缓存
+.vs/
+.idea/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+*.userprefs
+*.launchSettings.json.user
+
+# 3. VS Code 个人工作区配置
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# 4. 运行时崩溃日志与测试结果 (Test & Crash Dumps)
+TestResults/
+*.trx
+*.coverage
+*.coveragexml
+*.dmp
+*.crash
+
+# 5. NuGet 包缓存
+*.nupkg
+*.snupkg
+packages/
+!packages/build/
+
+# 6. 临时文件与自动备份
+*.tmp
+*.temp
+*~
+todos.json.tmp
+todos.json.corrupted.*
+
+# 7. 操作系统特有冗余文件 (macOS / Windows / Linux)
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db
+ehthumbs.db
+[Dd]esktop.ini

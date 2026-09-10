@@ -1,0 +1,19 @@
+<Project>
+  <!-- 全局公共编译属性与项目元数据配置 -->
+  <PropertyGroup>
+    <Version>1.0.0</Version>
+    <AssemblyVersion>1.0.0.0</AssemblyVersion>
+    <FileVersion>1.0.0.0</FileVersion>
+    <InformationalVersion>1.0.0</InformationalVersion>
+    <Authors>AvaloniaTodoApp Team</Authors>
+    <Company>有我科技</Company>
+    <Product>Avalonia TodoList 桌面清单</Product>
+    <Copyright>Copyright © 2026</Copyright>
+
+    <!-- 语言规范与可空引用类型检测 -->
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <!-- 忽略单元测试命名下划线与密封类建议，保持团队自然命名 -->
+    <NoWarn>$(NoWarn);CA1707;CA1852;CA1822;CA1001;CA1305</NoWarn>
+  </PropertyGroup>
+</Project>

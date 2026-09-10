@@ -1,0 +1,35 @@
+<Application xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="AvaloniaTodoApp.App"
+             RequestedThemeVariant="Default">
+             <!-- "Default" 会自动适配操作系统的明亮/暗黑模式 (Light / Dark Theme) -->
+
+    <Application.Styles>
+        <FluentTheme />
+    </Application.Styles>
+
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceInclude Source="avares://AvaloniaTodoApp/Resources/Icons.axaml" />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Application.Resources>
+
+    <TrayIcon.Icons>
+        <TrayIcons>
+            <TrayIcon Icon="avares://AvaloniaTodoApp/Assets/app-icon.png"
+                      ToolTipText="Avalonia 待办清单"
+                      Clicked="TrayIcon_OnClicked">
+                <TrayIcon.Menu>
+                    <NativeMenu>
+                        <NativeMenuItem Header="显示主界面" Click="MenuShowMainWindow_OnClick" />
+                        <NativeMenuItem Header="关于与更新..." Click="MenuShowAbout_OnClick" />
+                        <NativeMenuItemSeparator />
+                        <NativeMenuItem Header="退出程序" Click="MenuExit_OnClick" />
+                    </NativeMenu>
+                </TrayIcon.Menu>
+            </TrayIcon>
+        </TrayIcons>
+    </TrayIcon.Icons>
+</Application>
