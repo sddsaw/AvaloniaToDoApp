@@ -16,8 +16,8 @@
     </UserControl.Styles>
 
     <Grid Margin="32">
-        <ScrollViewer>
-            <StackPanel Spacing="16" MaxWidth="800" HorizontalAlignment="Left">
+        <ScrollViewer HorizontalScrollBarVisibility="Disabled">
+            <StackPanel Spacing="16" MaxWidth="850">
                 <!-- 标题 -->
                 <StackPanel Orientation="Horizontal" Spacing="10" Margin="0,0,0,6">
                     <PathIcon Data="{StaticResource IconTerminal}" Width="24" Height="24"
