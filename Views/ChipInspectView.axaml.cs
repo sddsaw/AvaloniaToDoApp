@@ -3,6 +3,7 @@ using System.IO;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Platform;
+using AvaloniaWebView;
 
 namespace AvaloniaTodoApp.Views;
 
@@ -40,8 +41,16 @@ public partial class ChipInspectView : UserControl
                 using var stream = AssetLoader.Open(uri);
                 using var reader = new StreamReader(stream);
                 var html = reader.ReadToEnd();
-                InspectWebView.HtmlContent = html;
-                Serilog.Log.Information("[WebView] 成功加载 3D 芯片检测看板 HTML (字符数: {Len})", html.Length);
+                var webView = this.FindControl<WebView>("InspectWebView");
+                if (webView != null)
+                {
+                    webView.HtmlContent = html;
+                    Serilog.Log.Information("[WebView] 成功加载 3D 芯片检测看板 HTML (字符数: {Len})", html.Length);
+                }
+                else
+                {
+                    Serilog.Log.Warning("[WebView] 未找到 InspectWebView 控件实例");
+                }
             }
             else
             {

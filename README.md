@@ -109,6 +109,21 @@ chmod +x ./scripts/build.sh
 
 ---
 
+## 🔌 内网 / 离线开发与构建指南
+
+如果项目需要在纯内网（无公网网络、无法访问 `nuget.org`）环境中开发或编译：
+
+1. **在外网机器上一键导出所有依赖包**：
+   - macOS / Linux：执行 `./scripts/export-offline-packages.sh`
+   - Windows：执行 `.\scripts\export-offline-packages.ps1`
+   - 脚本会自动将项目所需的所有 NuGet 包和运行时包收集到 `local-packages/` 目录，并配置好 [nuget.config](file:///Users/zhouenbo/AvaloniaTodoApp/nuget.config)。
+
+2. **带入内网使用**：
+   - 将整个工程（连同 `local-packages` 目录及 `nuget.config`）打包带入内网开发机；
+   - 在内网直接执行 `dotnet build` 或 `./scripts/build.sh`，NuGet 将 100% 优先从本地 `local-packages` 获取依赖，无需联网。
+
+---
+
 ## 🛡 数据安全性设计亮点
 
 1. **原子替换写盘**：先写入 `.tmp` 临时文件，完成后执行原子重命名，防止断电导致 JSON 文件损坏截断。

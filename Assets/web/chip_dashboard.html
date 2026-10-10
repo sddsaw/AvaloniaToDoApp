@@ -120,66 +120,116 @@
   <div id="canvas-container"></div>
 
   <!-- 顶部主导航栏 -->
-  <header class="absolute top-0 left-0 right-0 z-20 flex items-center justify-between px-5 py-2 panel-glass border-b border-cyan-900/40">
-    <div class="flex items-center space-x-3">
+  <header class="absolute top-0 left-0 right-0 z-20 flex items-center justify-between px-4 py-2 panel-glass border-b border-cyan-900/40 gap-3">
+    <div class="flex items-center space-x-2.5 flex-shrink-0">
       <div class="w-3 h-3 rounded-full bg-cyan-400 animate-pulse"></div>
       <div>
-        <h1 class="text-sm font-bold tracking-wider text-slate-100 flex items-center gap-2">
-          <span>SEMI-INSPECT 3D PRO</span>
-          <span class="text-[10px] px-2 py-0.5 rounded bg-cyan-950 text-cyan-300 border border-cyan-700">全业务与上位机平台</span>
+        <h1 class="text-xs font-bold tracking-wider text-slate-100 flex items-center gap-1.5">
+          <span>SEMI-INSPECT & ATE 3D PRO</span>
+          <span class="text-[9px] px-1.5 py-0.5 rounded bg-cyan-950 text-cyan-300 border border-cyan-700">20大工业场景</span>
         </h1>
       </div>
     </div>
 
-    <!-- 12 大场景水平滚动 Tab 栏 -->
-    <div class="flex items-center space-x-1 bg-slate-900/90 p-1 rounded-lg border border-slate-700 overflow-x-auto max-w-[65vw]">
-      <!-- 类别 1: 上位机控制与硬件测量 -->
-      <button onclick="switchScenario('focusMap')" id="btn-focusMap" class="scenario-btn whitespace-nowrap px-2.5 py-1.5 rounded text-xs font-medium transition-all bg-cyan-600 text-white shadow">
-        ⚡ 1. 探针台高度补偿 (Focus)
-      </button>
-      <button onclick="switchScenario('thermal3d')" id="btn-thermal3d" class="scenario-btn whitespace-nowrap px-2.5 py-1.5 rounded text-xs font-medium transition-all text-slate-400 hover:text-slate-200">
-        🔥 2. 红外热成像发热点 (IR)
-      </button>
-      <button onclick="switchScenario('eyeDiagram')" id="btn-eyeDiagram" class="scenario-btn whitespace-nowrap px-2.5 py-1.5 rounded text-xs font-medium transition-all text-slate-400 hover:text-slate-200">
-        📈 3. 高速信号 3D 眼图 (Eye)
-      </button>
-      <button onclick="switchScenario('motionRobot')" id="btn-motionRobot" class="scenario-btn whitespace-nowrap px-2.5 py-1.5 rounded text-xs font-medium transition-all text-slate-400 hover:text-slate-200">
-        🤖 4. 机械手运动防撞 (Robot)
-      </button>
-      <!-- 类别 2: 晶圆电学与表面形貌 -->
-      <button onclick="switchScenario('vfSurface')" id="btn-vfSurface" class="scenario-btn whitespace-nowrap px-2.5 py-1.5 rounded text-xs font-medium transition-all text-slate-400 hover:text-slate-200">
-        📊 5. V-F 响应曲面 & 打标
-      </button>
-      <button onclick="switchScenario('warpage')" id="btn-warpage" class="scenario-btn whitespace-nowrap px-2.5 py-1.5 rounded text-xs font-medium transition-all text-slate-400 hover:text-slate-200">
-        🌐 6. 晶圆翘曲形貌 (Warpage)
-      </button>
-      <button onclick="switchScenario('probeMark')" id="btn-probeMark" class="scenario-btn whitespace-nowrap px-2.5 py-1.5 rounded text-xs font-medium transition-all text-slate-400 hover:text-slate-200">
-        📍 7. 探针共面与针痕 (Probe)
-      </button>
-      <!-- 类别 3: 先进封装与缺陷检测 -->
-      <button onclick="switchScenario('stacking')" id="btn-stacking" class="scenario-btn whitespace-nowrap px-2.5 py-1.5 rounded text-xs font-medium transition-all text-slate-400 hover:text-slate-200">
-        📦 8. 3D IC 堆叠失效 (Chiplet)
-      </button>
-      <button onclick="switchScenario('void')" id="btn-void" class="scenario-btn whitespace-nowrap px-2.5 py-1.5 rounded text-xs font-medium transition-all text-slate-400 hover:text-slate-200">
-        🔬 9. 焊点空洞剖切 (Void)
-      </button>
-      <button onclick="switchScenario('stackedLot')" id="btn-stackedLot" class="scenario-btn whitespace-nowrap px-2.5 py-1.5 rounded text-xs font-medium transition-all text-slate-400 hover:text-slate-200">
-        📚 10. 批次穿透透视 (Lot Stack)
-      </button>
-      <button onclick="switchScenario('wireBond')" id="btn-wireBond" class="scenario-btn whitespace-nowrap px-2.5 py-1.5 rounded text-xs font-medium transition-all text-slate-400 hover:text-slate-200">
-        ⚡ 11. 引线键合短路 (Wire Bond)
-      </button>
-      <button onclick="switchScenario('fabTwin')" id="btn-fabTwin" class="scenario-btn whitespace-nowrap px-2.5 py-1.5 rounded text-xs font-medium transition-all text-slate-400 hover:text-slate-200">
-        🏭 12. 车间数字孪生 (Fab Twin)
-      </button>
+    <!-- 中部：场景分类过滤胶囊与 20 大场景滚动栏 -->
+    <div class="flex flex-col space-y-1 overflow-hidden max-w-[62vw]">
+      <!-- 分类过滤药丸按钮 -->
+      <div class="flex items-center space-x-1 text-[10px] overflow-x-auto">
+        <span class="text-slate-400 font-mono mr-1">分类:</span>
+        <button onclick="filterCategory('all')" id="cat-all" class="cat-pill px-2 py-0.5 rounded-full bg-cyan-600 text-white font-medium transition-all">全部 (20)</button>
+        <button onclick="filterCategory('physical')" id="cat-physical" class="cat-pill px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 hover:text-white transition-all">🔬 物理形貌与缺陷 (11)</button>
+        <button onclick="filterCategory('cp')" id="cat-cp" class="cat-pill px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 hover:text-white transition-all">🎯 晶圆CP与良率 (3)</button>
+        <button onclick="filterCategory('ft')" id="cat-ft" class="cat-pill px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 hover:text-white transition-all">🎛️ 成品FT与多工位 (2)</button>
+        <button onclick="filterCategory('hardware')" id="cat-hardware" class="cat-pill px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 hover:text-white transition-all">🔌 硬件拓扑与可测 (4)</button>
+      </div>
+
+      <!-- 20 大场景水平滚动栏 -->
+      <div id="scenario-bar" class="flex items-center space-x-1 bg-slate-900/90 p-1 rounded-lg border border-slate-700 overflow-x-auto">
+        <button onclick="switchScenario('focusMap')" id="btn-focusMap" data-cat="physical" class="scenario-btn whitespace-nowrap px-2 py-1 rounded text-xs font-medium transition-all bg-cyan-600 text-white shadow">
+          ⚡ 1. 探针高度补偿 (Focus)
+        </button>
+        <button onclick="switchScenario('thermal3d')" id="btn-thermal3d" data-cat="physical" class="scenario-btn whitespace-nowrap px-2 py-1 rounded text-xs font-medium transition-all text-slate-400 hover:text-slate-200">
+          🔥 2. 红外热成像 (IR)
+        </button>
+        <button onclick="switchScenario('eyeDiagram')" id="btn-eyeDiagram" data-cat="physical" class="scenario-btn whitespace-nowrap px-2 py-1 rounded text-xs font-medium transition-all text-slate-400 hover:text-slate-200">
+          📈 3. 高速 3D 眼图 (Eye)
+        </button>
+        <button onclick="switchScenario('motionRobot')" id="btn-motionRobot" data-cat="physical" class="scenario-btn whitespace-nowrap px-2 py-1 rounded text-xs font-medium transition-all text-slate-400 hover:text-slate-200">
+          🤖 4. 机械手防撞 (Robot)
+        </button>
+        <button onclick="switchScenario('vfSurface')" id="btn-vfSurface" data-cat="cp" class="scenario-btn whitespace-nowrap px-2 py-1 rounded text-xs font-medium transition-all text-slate-400 hover:text-slate-200">
+          📊 5. V-F 曲面打标
+        </button>
+        <button onclick="switchScenario('warpage')" id="btn-warpage" data-cat="physical" class="scenario-btn whitespace-nowrap px-2 py-1 rounded text-xs font-medium transition-all text-slate-400 hover:text-slate-200">
+          🌐 6. 晶圆翘曲 (Warpage)
+        </button>
+        <button onclick="switchScenario('probeMark')" id="btn-probeMark" data-cat="physical" class="scenario-btn whitespace-nowrap px-2 py-1 rounded text-xs font-medium transition-all text-slate-400 hover:text-slate-200">
+          📍 7. 探针针痕 (Probe)
+        </button>
+        <button onclick="switchScenario('stacking')" id="btn-stacking" data-cat="physical" class="scenario-btn whitespace-nowrap px-2 py-1 rounded text-xs font-medium transition-all text-slate-400 hover:text-slate-200">
+          📦 8. 3D IC 堆叠 (Chiplet)
+        </button>
+        <button onclick="switchScenario('void')" id="btn-void" data-cat="physical" class="scenario-btn whitespace-nowrap px-2 py-1 rounded text-xs font-medium transition-all text-slate-400 hover:text-slate-200">
+          🔬 9. 焊点空洞 (Void)
+        </button>
+        <button onclick="switchScenario('stackedLot')" id="btn-stackedLot" data-cat="physical" class="scenario-btn whitespace-nowrap px-2 py-1 rounded text-xs font-medium transition-all text-slate-400 hover:text-slate-200">
+          📚 10. 批次透视 (Lot Stack)
+        </button>
+        <button onclick="switchScenario('wireBond')" id="btn-wireBond" data-cat="physical" class="scenario-btn whitespace-nowrap px-2 py-1 rounded text-xs font-medium transition-all text-slate-400 hover:text-slate-200">
+          ⚡ 11. 引线键合短路 (Wire)
+        </button>
+        <button onclick="switchScenario('fabTwin')" id="btn-fabTwin" data-cat="physical" class="scenario-btn whitespace-nowrap px-2 py-1 rounded text-xs font-medium transition-all text-slate-400 hover:text-slate-200">
+          🏭 12. 车间数字孪生 (Twin)
+        </button>
+        <button onclick="switchScenario('waferMap')" id="btn-waferMap" data-cat="cp" class="scenario-btn whitespace-nowrap px-2 py-1 rounded text-xs font-medium transition-all text-slate-400 hover:text-slate-200">
+          🎯 13. 晶圆图谱步进 (Wafer Map)
+        </button>
+        <button onclick="switchScenario('multiSite')" id="btn-multiSite" data-cat="ft" class="scenario-btn whitespace-nowrap px-2 py-1 rounded text-xs font-medium transition-all text-slate-400 hover:text-slate-200">
+          🎛️ 14. 64-Site 阻抗 (Multi-Site)
+        </button>
+        <button onclick="switchScenario('shmoo3d')" id="btn-shmoo3d" data-cat="hardware" class="scenario-btn whitespace-nowrap px-2 py-1 rounded text-xs font-medium transition-all text-slate-400 hover:text-slate-200">
+          🧊 15. 3D Shmoo 工作窗口
+        </button>
+        <button onclick="switchScenario('testProfiler')" id="btn-testProfiler" data-cat="ft" class="scenario-btn whitespace-nowrap px-2 py-1 rounded text-xs font-medium transition-all text-slate-400 hover:text-slate-200">
+          ⏱️ 16. 测试流程耗时分析
+        </button>
+        <button onclick="switchScenario('dpat')" id="btn-dpat" data-cat="cp" class="scenario-btn whitespace-nowrap px-2 py-1 rounded text-xs font-medium transition-all text-slate-400 hover:text-slate-200">
+          🛡️ 17. 车规 DPAT 离群剔除
+        </button>
+        <button onclick="switchScenario('memRepair')" id="btn-memRepair" data-cat="hardware" class="scenario-btn whitespace-nowrap px-2 py-1 rounded text-xs font-medium transition-all text-slate-400 hover:text-slate-200">
+          🧠 18. 存储器冗余修复
+        </button>
+        <button onclick="switchScenario('kelvin')" id="btn-kelvin" data-cat="hardware" class="scenario-btn whitespace-nowrap px-2 py-1 rounded text-xs font-medium transition-all text-slate-400 hover:text-slate-200">
+          🔌 19. 四线制 Kelvin 继电器
+        </button>
+        <button onclick="switchScenario('efuse')" id="btn-efuse" data-cat="hardware" class="scenario-btn whitespace-nowrap px-2 py-1 rounded text-xs font-medium transition-all text-slate-400 hover:text-slate-200">
+          ⚡ 20. eFuse 熔丝脉冲烧录
+        </button>
+      </div>
     </div>
 
-    <!-- 上位机硬件状态 -->
-    <div class="text-xs text-slate-400 flex items-center space-x-2 font-mono">
-      <span>PLC/上位机:</span>
-      <span class="text-emerald-400 font-bold">● RUNNING</span>
+    <!-- 右侧：展厅自动轮播与 SECS/GEM 通信终端入口 -->
+    <div class="flex items-center space-x-2 flex-shrink-0 font-mono text-xs">
+      <button id="btn-auto-tour" onclick="toggleAutoTour()" class="px-2.5 py-1 rounded bg-slate-800 hover:bg-cyan-900 border border-slate-700 hover:border-cyan-500 text-cyan-300 text-[11px] flex items-center gap-1 transition-all shadow">
+        <span>▶</span><span>自动巡检 (Tour)</span>
+      </button>
+
+      <div onclick="toggleSecsGemModal()" title="点击打开 SEMI SECS/GEM 报文通信监视器" class="cursor-pointer group flex items-center space-x-1.5 px-2.5 py-1 rounded bg-slate-800/90 border border-slate-700 hover:border-cyan-500 transition-all shadow">
+        <span class="w-2 h-2 rounded-full bg-emerald-400 group-hover:animate-ping"></span>
+        <span class="text-slate-300 text-[11px]">SECS/GEM:</span>
+        <span class="text-emerald-400 font-bold text-[11px]">ONLINE</span>
+      </div>
     </div>
   </header>
+
+  <!-- 右上方快速相机视角工具栏 -->
+  <div class="absolute right-5 top-20 z-20 panel-glass rounded-lg px-2.5 py-1.5 flex items-center space-x-1.5 text-xs text-slate-300 shadow-xl">
+    <span class="text-[10px] text-slate-400 mr-0.5 font-mono">📷 视角:</span>
+    <button onclick="setCameraView('top')" class="px-2 py-1 rounded bg-slate-800 hover:bg-cyan-600 hover:text-white transition-all text-[11px]">顶视 (Top)</button>
+    <button onclick="setCameraView('front')" class="px-2 py-1 rounded bg-slate-800 hover:bg-cyan-600 hover:text-white transition-all text-[11px]">侧视 (Side)</button>
+    <button onclick="setCameraView('iso')" class="px-2 py-1 rounded bg-slate-800 hover:bg-cyan-600 hover:text-white transition-all text-[11px]">等轴测 (ISO)</button>
+    <button onclick="setCameraView('reset')" class="px-2 py-1 rounded bg-slate-800 hover:bg-cyan-600 hover:text-white transition-all text-[11px]">复位 (Reset)</button>
+  </div>
 
   <!-- 左侧动态控制面板 -->
   <aside class="absolute left-5 top-16 z-20 w-80 panel-glass rounded-xl p-4 text-xs space-y-3.5 shadow-2xl">
@@ -196,6 +246,16 @@
         <span class="text-[10px] text-cyan-400">实时计算</span>
       </div>
       <div id="dynamic-metrics" class="grid grid-cols-2 gap-2 pt-1 font-mono text-[11px]"></div>
+    </div>
+
+    <!-- 工业导出与 Avalonia C# 模拟调用按钮 -->
+    <div class="space-y-1.5 pt-0.5">
+      <button onclick="exportTestDataReport()" class="w-full py-1.5 px-2 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 hover:border-cyan-500 font-mono text-[11px] flex items-center justify-center gap-1.5 transition-all shadow">
+        <span>📥</span><span>导出工业测试报表 (CSV/STDF)</span>
+      </button>
+      <button onclick="simulateCSharpEvent()" class="w-full py-1.5 px-2 rounded bg-cyan-950/80 hover:bg-cyan-900 border border-cyan-800/80 text-cyan-300 font-mono text-[11px] flex items-center justify-center gap-1.5 transition-all shadow">
+        <span>⚡</span><span>模拟 Avalonia C# 数据注入</span>
+      </button>
     </div>
 
     <div class="text-[10px] text-slate-500 text-center">
@@ -236,6 +296,19 @@
     let animatedWires = [];
     let ohtVehicle;
 
+    // ATE 核心场景专有状态变量
+    let waferDies = [], waferProbeArm, currentDieIdx = 0, waferStepTimer = 0;
+    let waferStats = { tested: 0, pass: 0, bin1: 0, bin2: 0, bin3: 0, bin4: 0, yieldRate: 100 };
+    let multiSiteUnits = [], cleaningArmMesh, isCleaningAnim = false, cleanProgress = 0;
+    let shmooVolumeGroup, shmooSliceMesh, shmooPointMeshes = [];
+    let profilerStages = [], profilerParticles = [], profilerBeamGroup;
+
+    // 场景 17-20: 高阶 ATE 专有状态变量
+    let dpatDies = [], dpatOutlierRings = [];
+    let memCells = [], spareRows = [], spareCols = [], memRepairDone = false;
+    let kelvinRelays = [], kelvinParticles = [], kelvinSenseFault = false;
+    let fuseBits = [], fuseSparkParticles = [], isFuseBurning = false, burnCurrentBit = 0;
+
     let params = {
       zCompFactor: 1.0,
       hotspotPower: 2.5,
@@ -252,7 +325,26 @@
       clipOffset: 0,
       opacity: 0.75,
       waferGap: 1.8,
-      waferOpacity: 0.6
+      waferOpacity: 0.6,
+      // ATE 专有参数
+      waferStepSpeed: 1.0,
+      waferPattern: 'random',
+      waferAutoRun: true,
+      multiSiteForce: 85,
+      multiSiteDirtyNoise: 1.0,
+      shmooTempSlice: 25,
+      shmooVOffset: 0.0,
+      shmooShowCloud: true,
+      profilerCompressed: false,
+      profilerParallel: true,
+      // 高阶 ATE 专有参数 (17-20)
+      dpatSigma: 3.0,
+      dpatEnableGdibn: true,
+      memSpareRows: 2,
+      memSpareCols: 2,
+      kelvinRelayClosed: true,
+      kelvinSenseOk: true,
+      fuseSelectedField: 'securityKey'
     };
 
     function getColorFromHeight(normalizedVal) {
@@ -310,6 +402,23 @@
     function clearMainGroup() {
       while (mainGroup.children.length > 0) mainGroup.remove(mainGroup.children[0]);
       clearFlagMarkers();
+      waferDies = [];
+      multiSiteUnits = [];
+      shmooPointMeshes = [];
+      profilerStages = [];
+      profilerParticles = [];
+      isCleaningAnim = false;
+      dpatDies = [];
+      dpatOutlierRings = [];
+      memCells = [];
+      spareRows = [];
+      spareCols = [];
+      memRepairDone = false;
+      kelvinRelays = [];
+      kelvinParticles = [];
+      fuseBits = [];
+      fuseSparkParticles = [];
+      isFuseBurning = false;
       document.getElementById('color-legend-box').style.display = 'none';
     }
 
@@ -877,6 +986,1158 @@
       ohtVehicle.position.set(0, 10.2, 0); mainGroup.add(ohtVehicle);
     }
 
+    // --- 场景 13: 3D 晶圆图谱步进测试 (Wafer Map) ---
+    function buildWaferMapScenario() {
+      clearMainGroup();
+      camera.position.set(0, 32, 36);
+      controls.target.set(0, 0, 0);
+
+      // 1. 晶圆承载台 Chuck
+      const chuck = new THREE.Mesh(
+        new THREE.CylinderGeometry(17, 17, 1.8, 64),
+        new THREE.MeshStandardMaterial({ color: 0x111827, metalness: 0.85, roughness: 0.25 })
+      );
+      chuck.position.y = -1.0;
+      mainGroup.add(chuck);
+
+      // 晶圆边缘外金环
+      const chuckRing = new THREE.Mesh(
+        new THREE.RingGeometry(16, 17, 64).rotateX(-Math.PI / 2),
+        new THREE.MeshStandardMaterial({ color: 0x0284c7, metalness: 0.9 })
+      );
+      chuckRing.position.y = -0.05;
+      mainGroup.add(chuckRing);
+
+      // 2. 晶圆基片底盘 (Silicon Wafer Substrate with Notch)
+      const waferBase = new THREE.Mesh(
+        new THREE.CylinderGeometry(15.6, 15.6, 0.4, 64),
+        new THREE.MeshStandardMaterial({ color: 0x0f172a, metalness: 0.9, roughness: 0.1 })
+      );
+      waferBase.position.y = -0.15;
+      mainGroup.add(waferBase);
+
+      // 晶圆晶向 Notch 缺口标识
+      const notch = new THREE.Mesh(
+        new THREE.BoxGeometry(0.8, 0.5, 0.8),
+        new THREE.MeshBasicMaterial({ color: 0x38bdf8 })
+      );
+      notch.position.set(0, 0, -15.5);
+      mainGroup.add(notch);
+
+      // 3. 生成晶圆上的矩形 Die 网格阵列
+      waferDies = [];
+      const dieSize = 1.45, dieGap = 0.15, diePitch = dieSize + dieGap;
+      const radiusLimit = 14.5;
+      const dieGeo = new THREE.BoxGeometry(dieSize, 0.3, dieSize);
+
+      let totalCount = 0;
+      for (let r = -9; r <= 9; r++) {
+        for (let c = -9; c <= 9; c++) {
+          const posX = c * diePitch;
+          const posZ = r * diePitch;
+          const dist = Math.sqrt(posX * posX + posZ * posZ);
+          if (dist > radiusLimit) continue; // 仅保留圆形边界内的有效 Die
+
+          // 依据缺陷模式预计算目标 Bin
+          let targetBin = 1; // 1: Pass(绿), 2: OS Fail(红), 3: Leakage(黄), 4: Func(紫)
+          if (params.waferPattern === 'random') {
+            const rnd = Math.random();
+            if (rnd < 0.94) targetBin = 1;
+            else if (rnd < 0.96) targetBin = 2;
+            else if (rnd < 0.98) targetBin = 3;
+            else targetBin = 4;
+          } else if (params.waferPattern === 'ring') {
+            if (dist > 11.8) {
+              targetBin = Math.random() < 0.7 ? 2 : (Math.random() < 0.5 ? 3 : 1);
+            } else {
+              targetBin = Math.random() < 0.97 ? 1 : 2;
+            }
+          } else if (params.waferPattern === 'scratch') {
+            // 晶圆划痕缺陷 (从左上到右下的连续斜线)
+            if (Math.abs(r - c * 0.75 - 1.5) < 0.9) {
+              targetBin = 2; // 物理机械划伤开短路
+            } else {
+              targetBin = Math.random() < 0.96 ? 1 : 3;
+            }
+          } else if (params.waferPattern === 'center') {
+            // 中心热点斑点失效 (Center Spot)
+            if (dist < 4.8) {
+              targetBin = Math.random() < 0.65 ? 4 : (Math.random() < 0.5 ? 3 : 1);
+            } else {
+              targetBin = Math.random() < 0.96 ? 1 : 2;
+            }
+          }
+
+          const dieMat = new THREE.MeshStandardMaterial({
+            color: 0x1e293b,
+            metalness: 0.3,
+            roughness: 0.6
+          });
+          const dieMesh = new THREE.Mesh(dieGeo, dieMat);
+          dieMesh.position.set(posX, 0.15, posZ);
+          mainGroup.add(dieMesh);
+
+          waferDies.push({
+            id: totalCount++,
+            row: r,
+            col: c,
+            posX: posX,
+            posZ: posZ,
+            mesh: dieMesh,
+            tested: false,
+            targetBin: targetBin,
+            inTest: false
+          });
+        }
+      }
+
+      // 按蛇形路径（S-Curve）排序测试顺序，模拟真实探针台步进
+      waferDies.sort((a, b) => {
+        if (a.row !== b.row) return a.row - b.row;
+        return (a.row % 2 === 0) ? (a.col - b.col) : (b.col - a.col);
+      });
+
+      // 4. 构建 3D 探针台卡头 (Probe Head Assembly)
+      waferProbeArm = new THREE.Group();
+      // 上方悬臂导轨
+      const armBar = new THREE.Mesh(
+        new THREE.BoxGeometry(2.5, 1.2, 8),
+        new THREE.MeshStandardMaterial({ color: 0x475569, metalness: 0.85 })
+      );
+      armBar.position.set(0, 7.5, 4);
+      waferProbeArm.add(armBar);
+
+      // 环形探针卡 PCB 盘 (Probe Card DIB)
+      const pcbCard = new THREE.Mesh(
+        new THREE.CylinderGeometry(3.5, 3.5, 0.4, 32),
+        new THREE.MeshStandardMaterial({ color: 0x065f46, metalness: 0.4, roughness: 0.3 })
+      );
+      pcbCard.position.set(0, 6.2, 0);
+      waferProbeArm.add(pcbCard);
+
+      // 探针束尖 (Probe Needle Tip Cone)
+      const needle = new THREE.Mesh(
+        new THREE.ConeGeometry(0.5, 2.5, 16).rotateX(Math.PI),
+        new THREE.MeshStandardMaterial({ color: 0xe2e8f0, metalness: 0.95, roughness: 0.1 })
+      );
+      needle.position.set(0, 4.8, 0);
+      waferProbeArm.add(needle);
+
+      // 扎针激光光斑 (Laser Spot Pointer)
+      const laserBeam = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.04, 0.04, 3.8, 8),
+        new THREE.MeshBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.65 })
+      );
+      laserBeam.position.set(0, 2.5, 0);
+      waferProbeArm.add(laserBeam);
+
+      waferProbeArm.position.set(waferDies[0].posX, 0, waferDies[0].posZ);
+      mainGroup.add(waferProbeArm);
+
+      currentDieIdx = 0;
+      waferStepTimer = 0;
+      waferStats = { tested: 0, pass: 0, bin1: 0, bin2: 0, bin3: 0, bin4: 0, yieldRate: 100 };
+      updateWaferMetrics();
+    }
+
+    function runAllWaferInstant() {
+      waferDies.forEach(die => {
+        applyDieResult(die);
+      });
+      currentDieIdx = waferDies.length;
+      updateWaferMetrics();
+    }
+
+    function resetWaferTest() {
+      waferDies.forEach(die => {
+        die.tested = false;
+        die.inTest = false;
+        die.mesh.material.color.set(0x1e293b);
+        die.mesh.material.emissive.set(0x000000);
+      });
+      currentDieIdx = 0;
+      waferStats = { tested: 0, pass: 0, bin1: 0, bin2: 0, bin3: 0, bin4: 0, yieldRate: 100 };
+      updateWaferMetrics();
+    }
+
+    function applyDieResult(die) {
+      die.tested = true;
+      die.inTest = false;
+      const binColors = {
+        1: 0x10b981, // Bin 1 Pass (绿)
+        2: 0xef4444, // Bin 2 OS Fail (红)
+        3: 0xf59e0b, // Bin 3 Leakage (黄)
+        4: 0xa855f7  // Bin 4 Functional (紫)
+      };
+      const col = binColors[die.targetBin] || 0x10b981;
+      die.mesh.material.color.set(col);
+      die.mesh.material.emissive.set(col);
+      die.mesh.material.emissiveIntensity = 0.35;
+
+      waferStats.tested++;
+      if (die.targetBin === 1) {
+        waferStats.pass++;
+        waferStats.bin1++;
+      } else if (die.targetBin === 2) waferStats.bin2++;
+      else if (die.targetBin === 3) waferStats.bin3++;
+      else if (die.targetBin === 4) waferStats.bin4++;
+      waferStats.yieldRate = ((waferStats.pass / (waferStats.tested || 1)) * 100).toFixed(1);
+    }
+
+    function updateWaferMetrics() {
+      const elTested = document.getElementById('wm-tested');
+      const elYield = document.getElementById('wm-yield');
+      const elBin1 = document.getElementById('wm-bin1');
+      const elFail = document.getElementById('wm-fail');
+      if (elTested) elTested.textContent = `${waferStats.tested} / ${waferDies.length}`;
+      if (elYield) {
+        elYield.textContent = `${waferStats.yieldRate}%`;
+        elYield.className = parseFloat(waferStats.yieldRate) > 90 ? 'text-emerald-400 font-bold' : 'text-rose-400 font-bold';
+      }
+      if (elBin1) elBin1.textContent = `${waferStats.bin1} ea`;
+      if (elFail) elFail.textContent = `${waferStats.bin2 + waferStats.bin3 + waferStats.bin4} ea`;
+    }
+
+    // --- 场景 14: 64-Site 并行同测与接触阻抗 (Multi-Site & Cres) ---
+    function buildMultiSiteScenario() {
+      clearMainGroup();
+      camera.position.set(0, 36, 42);
+      controls.target.set(0, 0, 0);
+
+      // 1. DIB (Device Interface Board) 沉金大型母板
+      const boardGeo = new THREE.BoxGeometry(34, 1.2, 34);
+      const boardMat = new THREE.MeshStandardMaterial({ color: 0x091422, metalness: 0.6, roughness: 0.4 });
+      const board = new THREE.Mesh(boardGeo, boardMat);
+      board.position.y = -0.6;
+      mainGroup.add(board);
+
+      // 金色印刷电路母线铜皮装饰
+      const traceMat = new THREE.LineBasicMaterial({ color: 0xd97706, transparent: true, opacity: 0.4 });
+      for (let i = -14; i <= 14; i += 4) {
+        const pts = [new THREE.Vector3(i, 0.02, -15), new THREE.Vector3(i, 0.02, 15)];
+        board.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), traceMat));
+      }
+
+      // 2. 排布 8x8 = 64 个测试座 (Sockets / Contactor Sites)
+      multiSiteUnits = [];
+      const siteCols = 8, siteRows = 8;
+      const pitch = 3.6;
+      const socketGeo = new THREE.BoxGeometry(2.6, 0.8, 2.6);
+      const socketMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, metalness: 0.8, roughness: 0.2 });
+      const pinGeo = new THREE.CylinderGeometry(0.1, 0.1, 0.6, 8);
+      const pinMat = new THREE.MeshStandardMaterial({ color: 0xf59e0b, metalness: 0.95 });
+
+      let siteId = 1;
+      for (let r = 0; r < siteRows; r++) {
+        for (let c = 0; c < siteCols; c++) {
+          const posX = (c - (siteCols - 1) / 2) * pitch;
+          const posZ = (r - (siteRows - 1) / 2) * pitch;
+
+          const siteGroup = new THREE.Group();
+          siteGroup.position.set(posX, 0.4, posZ);
+
+          const socketMesh = new THREE.Mesh(socketGeo, socketMat);
+          siteGroup.add(socketMesh);
+
+          // 4 根 Pogo Pin 探针
+          const pinOffsets = [[-0.8, -0.8], [0.8, -0.8], [-0.8, 0.8], [0.8, 0.8]];
+          pinOffsets.forEach(([px, pz]) => {
+            const p = new THREE.Mesh(pinGeo, pinMat);
+            p.position.set(px, 0.6, pz);
+            siteGroup.add(p);
+          });
+
+          // 接触阻抗 Cres 柱体指示器 (Height and Color represent Cres)
+          const isDirtyDefault = (siteId === 19 || siteId === 44);
+          const baseCres = isDirtyDefault ? (620 + Math.random() * 80) : (85 + Math.random() * 45);
+
+          const cresPillarGeo = new THREE.CylinderGeometry(0.4, 0.4, 1, 16);
+          const cresPillarMat = new THREE.MeshStandardMaterial({
+            color: isDirtyDefault ? 0xef4444 : 0x10b981,
+            metalness: 0.3,
+            roughness: 0.2,
+            emissive: isDirtyDefault ? 0xef4444 : 0x10b981,
+            emissiveIntensity: isDirtyDefault ? 0.8 : 0.2
+          });
+          const cresPillar = new THREE.Mesh(cresPillarGeo, cresPillarMat);
+          cresPillar.position.set(0, 1.2, 0);
+          siteGroup.add(cresPillar);
+
+          mainGroup.add(siteGroup);
+
+          multiSiteUnits.push({
+            id: siteId++,
+            group: siteGroup,
+            pillar: cresPillar,
+            baseCres: baseCres,
+            currentCres: baseCres,
+            isMasked: false,
+            isDirty: isDirtyDefault
+          });
+        }
+      }
+
+      // 3. 悬浮的自动清针打磨机构 (Auto Cleaning Arm)
+      cleaningArmMesh = new THREE.Group();
+      const armBar = new THREE.Mesh(
+        new THREE.BoxGeometry(32, 0.8, 2.0),
+        new THREE.MeshStandardMaterial({ color: 0x38bdf8, metalness: 0.8 })
+      );
+      cleaningArmMesh.add(armBar);
+
+      const padMat = new THREE.MeshStandardMaterial({ color: 0xa855f7, roughness: 0.9 });
+      for (let bx = -14; bx <= 14; bx += 4) {
+        const brush = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.6, 1.8), padMat);
+        brush.position.set(bx, -0.6, 0);
+        cleaningArmMesh.add(brush);
+      }
+      cleaningArmMesh.position.set(0, 8, -20);
+      mainGroup.add(cleaningArmMesh);
+
+      updateMultiSiteCres();
+    }
+
+    function updateMultiSiteCres() {
+      const forceRatio = 85 / (params.multiSiteForce || 85);
+      let activeCount = 0, sumCres = 0, maxCres = 0, maxSiteId = 1;
+
+      multiSiteUnits.forEach(u => {
+        if (u.isMasked) {
+          u.pillar.visible = false;
+          u.group.children[0].material.color.set(0x334155);
+          return;
+        }
+        u.pillar.visible = true;
+        activeCount++;
+
+        let cres = u.baseCres * forceRatio * params.multiSiteDirtyNoise;
+        if (u.isDirty) cres = Math.max(cres, 580);
+        u.currentCres = cres;
+        sumCres += cres;
+        if (cres > maxCres) { maxCres = cres; maxSiteId = u.id; }
+
+        const normHeight = Math.min(Math.max((cres / 150) * 1.5, 0.6), 5.5);
+        u.pillar.scale.set(1, normHeight, 1);
+        u.pillar.position.y = 0.8 + normHeight / 2;
+
+        let col = 0x10b981;
+        if (cres > 400) col = 0xef4444; // 超差红灯
+        else if (cres > 180) col = 0xf59e0b; // 警告黄灯
+
+        u.pillar.material.color.set(col);
+        u.pillar.material.emissive.set(col);
+        u.pillar.material.emissiveIntensity = cres > 400 ? 0.9 : 0.2;
+      });
+
+      const avgCres = activeCount > 0 ? (sumCres / activeCount).toFixed(1) : 0;
+      const elSites = document.getElementById('ms-sites');
+      const elAvg = document.getElementById('ms-avg');
+      const elMax = document.getElementById('ms-max');
+      const elEff = document.getElementById('ms-eff');
+      if (elSites) elSites.textContent = `${activeCount} / 64 Sites`;
+      if (elAvg) elAvg.textContent = `${avgCres} mΩ`;
+      if (elMax) elMax.textContent = `${maxCres.toFixed(0)} mΩ (#${maxSiteId})`;
+      if (elEff) elEff.textContent = `${((activeCount / 64) * 98.4).toFixed(1)}%`;
+    }
+
+    function triggerAutoCleanProbes() {
+      isCleaningAnim = true;
+      cleanProgress = 0;
+      multiSiteUnits.forEach(u => {
+        u.isDirty = false;
+        u.baseCres = 80 + Math.random() * 35;
+      });
+    }
+
+    function toggleMaskFailSites() {
+      multiSiteUnits.forEach(u => {
+        if (u.currentCres > 350) {
+          u.isMasked = !u.isMasked;
+        }
+      });
+      updateMultiSiteCres();
+    }
+
+    // --- 场景 15: 3D Shmoo 工作窗口扫描体 (Shmoo 3D Volume) ---
+    function buildShmoo3DScenario() {
+      clearMainGroup();
+      camera.position.set(45, 32, 50);
+      controls.target.set(0, 8, 0);
+
+      // 1. 三维空间标尺线框 (Bounding Grid Box: X=VDD, Y=Temp, Z=Freq)
+      const boxSizeX = 30, boxSizeY = 24, boxSizeZ = 30;
+      const boxGeo = new THREE.BoxGeometry(boxSizeX, boxSizeY, boxSizeZ);
+      const boxWire = new THREE.LineSegments(
+        new THREE.EdgesGeometry(boxGeo),
+        new THREE.LineBasicMaterial({ color: 0x334155, linewidth: 1.5 })
+      );
+      boxWire.position.set(0, boxSizeY / 2, 0);
+      mainGroup.add(boxWire);
+
+      // 地面投影基准格栅
+      const grid = new THREE.GridHelper(30, 10, 0x0284c7, 0x1e293b);
+      grid.position.y = 0;
+      mainGroup.add(grid);
+
+      // 轴文字标牌函数
+      function createShmooLabel(text, pos, color = '#38bdf8') {
+        const canvas = document.createElement('canvas'), ctx = canvas.getContext('2d');
+        canvas.width = 256; canvas.height = 64;
+        ctx.font = 'bold 26px monospace';
+        ctx.fillStyle = color; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText(text, 128, 32);
+        const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(canvas), transparent: true }));
+        sp.scale.set(12, 3, 1);
+        sp.position.set(...pos);
+        mainGroup.add(sp);
+      }
+      createShmooLabel('VDD_Core (0.6V ~ 1.4V)', [0, -2, 18], '#38bdf8');
+      createShmooLabel('Frequency (200M ~ 1200MHz)', [18, -2, 0], '#a855f7');
+      createShmooLabel('Temp (-40℃ ~ +125℃)', [-18, 12, -18], '#f59e0b');
+
+      // 2. 生成三维 Pass/Fail 体素点云
+      shmooPointMeshes = [];
+      const vSteps = 10, fSteps = 10, tSteps = 6;
+      const ptGeo = new THREE.SphereGeometry(0.35, 10, 10);
+      const passMat = new THREE.MeshStandardMaterial({ color: 0x10b981, emissive: 0x10b981, emissiveIntensity: 0.6 });
+
+      for (let ti = 0; ti < tSteps; ti++) {
+        const normT = ti / (tSteps - 1); // 0 -> -40℃, 1 -> +125℃
+        const posY = normT * boxSizeY;
+        const tempC = -40 + normT * 165;
+
+        for (let vi = 0; vi < vSteps; vi++) {
+          const normV = vi / (vSteps - 1);
+          const posX = -boxSizeX / 2 + normV * boxSizeX;
+          const vdd = 0.6 + normV * 0.8;
+
+          for (let fi = 0; fi < fSteps; fi++) {
+            const normF = fi / (fSteps - 1);
+            const posZ = -boxSizeZ / 2 + normF * boxSizeZ;
+            const freq = 200 + normF * 1000;
+
+            const maxSafeFreq = (vdd - 0.55) * 1350 - (tempC > 25 ? (tempC - 25) * 1.8 : 0);
+            const isPass = (freq <= maxSafeFreq) && (vdd >= 0.65);
+
+            if (isPass) {
+              const dot = new THREE.Mesh(ptGeo, passMat);
+              dot.position.set(posX, posY, posZ);
+              dot.userData = { tempC: tempC, isPass: true, vdd: vdd, freq: freq };
+              mainGroup.add(dot);
+              shmooPointMeshes.push(dot);
+            }
+          }
+        }
+      }
+
+      // 3. 可平移的二维温度切片平面 (Temperature Slice Plane)
+      const sliceGeo = new THREE.PlaneGeometry(boxSizeX, boxSizeZ).rotateX(-Math.PI / 2);
+      const sliceMat = new THREE.MeshStandardMaterial({
+        color: 0x0284c7,
+        transparent: true,
+        opacity: 0.35,
+        side: THREE.DoubleSide,
+        roughness: 0.2
+      });
+      shmooSliceMesh = new THREE.Mesh(sliceGeo, sliceMat);
+      shmooSliceMesh.position.y = 12; // 默认常温 25℃ 位置
+      mainGroup.add(shmooSliceMesh);
+
+      const sliceEdge = new THREE.LineSegments(
+        new THREE.EdgesGeometry(sliceGeo),
+        new THREE.LineBasicMaterial({ color: 0x38bdf8, linewidth: 2 })
+      );
+      shmooSliceMesh.add(sliceEdge);
+
+      updateShmooSlice();
+    }
+
+    function updateShmooSlice() {
+      if (!shmooSliceMesh) return;
+      const normY = (params.shmooTempSlice + 40) / 165; // -40℃ ~ 125℃
+      shmooSliceMesh.position.y = Math.min(Math.max(normY * 24, 0.2), 23.8);
+
+      shmooPointMeshes.forEach(dot => {
+        const dist = Math.abs(dot.position.y - shmooSliceMesh.position.y);
+        if (dist < 2.5) {
+          dot.scale.set(1.4, 1.4, 1.4);
+          dot.material.emissiveIntensity = 0.95;
+        } else {
+          dot.scale.set(0.85, 0.85, 0.85);
+          dot.material.emissiveIntensity = 0.35;
+        }
+      });
+
+      const maxF = Math.round(1180 - (params.shmooTempSlice > 25 ? (params.shmooTempSlice - 25) * 1.9 : 0));
+      const elFmax = document.getElementById('sh-fmax');
+      const elVmin = document.getElementById('sh-vmin');
+      const elMargin = document.getElementById('sh-margin');
+      if (elFmax) elFmax.textContent = `${maxF} MHz`;
+      if (elVmin) elVmin.textContent = `${(0.68 + (params.shmooTempSlice > 80 ? 0.06 : 0)).toFixed(2)} V`;
+      if (elMargin) elMargin.textContent = `+${Math.max(8, 22 - (params.shmooTempSlice > 25 ? (params.shmooTempSlice-25)*0.12 : 0)).toFixed(1)}%`;
+    }
+
+    // --- 场景 16: 测试流程耗时分析 (Test Flow Profiler) ---
+    function buildTestProfilerScenario() {
+      clearMainGroup();
+      camera.position.set(0, 24, 38);
+      controls.target.set(0, 5, 0);
+
+      const stageDefs = [
+        { name: '1. Continuity (OS)', time: 15, baseTime: 15, color: 0x0284c7, inst: 'PMU-01' },
+        { name: '2. Power-Up / Inrush', time: 22, baseTime: 22, color: 0x0284c7, inst: 'DPS-04' },
+        { name: '3. Leakage Current', time: 28, baseTime: 28, color: 0x0284c7, inst: 'SMU-02' },
+        { name: '4. DC Parametric', time: 48, baseTime: 48, color: 0x0284c7, inst: 'PE-Card' },
+        { name: '5. SCAN / ATPG', time: params.profilerCompressed ? 58 : 195, baseTime: 195, color: 0xef4444, isBottleneck: true, inst: 'Digital Pattern' },
+        { name: '6. Memory BIST', time: params.profilerParallel ? 65 : 110, baseTime: 110, color: 0xf59e0b, inst: 'BIST Engine' },
+        { name: '7. SerDes Eye', time: 85, baseTime: 85, color: 0x0284c7, inst: 'RF/HighSpeed' },
+        { name: '8. OTP / eFuse Trim', time: 52, baseTime: 52, color: 0xa855f7, inst: 'Pulse Gen' },
+        { name: '9. PowerDown & Bin', time: 15, baseTime: 15, color: 0x10b981, inst: 'Handler I/O' }
+      ];
+
+      profilerStages = [];
+      const totalWidth = 32;
+      const startX = -totalWidth / 2 + 1.8;
+      const stepX = totalWidth / stageDefs.length;
+
+      const track = new THREE.Mesh(
+        new THREE.BoxGeometry(34, 0.6, 6),
+        new THREE.MeshStandardMaterial({ color: 0x1e293b, metalness: 0.8, roughness: 0.3 })
+      );
+      track.position.y = -0.3;
+      mainGroup.add(track);
+
+      stageDefs.forEach((st, idx) => {
+        const posX = startX + idx * stepX;
+        const barHeight = Math.max((st.time / 200) * 12, 1.2);
+
+        const barGroup = new THREE.Group();
+        barGroup.position.set(posX, 0, 0);
+
+        const barMesh = new THREE.Mesh(
+          new THREE.BoxGeometry(2.4, barHeight, 3.2),
+          new THREE.MeshStandardMaterial({
+            color: st.color,
+            metalness: 0.4,
+            roughness: 0.2,
+            emissive: st.color,
+            emissiveIntensity: st.isBottleneck && !params.profilerCompressed ? 0.7 : 0.2
+          })
+        );
+        barMesh.position.y = barHeight / 2;
+        barGroup.add(barMesh);
+
+        const cap = new THREE.Mesh(
+          new THREE.BoxGeometry(2.5, 0.2, 3.3),
+          new THREE.MeshBasicMaterial({ color: 0xffffff })
+        );
+        cap.position.y = barHeight + 0.1;
+        barGroup.add(cap);
+
+        mainGroup.add(barGroup);
+
+        profilerStages.push({
+          idx: idx,
+          def: st,
+          group: barGroup,
+          mesh: barMesh,
+          cap: cap,
+          height: barHeight
+        });
+      });
+
+      profilerParticles = [];
+      const pGeo = new THREE.SphereGeometry(0.2, 8, 8);
+      const pMat = new THREE.MeshBasicMaterial({ color: 0x38bdf8 });
+      for (let i = 0; i < 12; i++) {
+        const p = new THREE.Mesh(pGeo, pMat);
+        p.position.set(-16 + i * 2.8, 1.5, 0);
+        mainGroup.add(p);
+        profilerParticles.push({ mesh: p, progress: i / 12 });
+      }
+
+      updateProfilerMetrics();
+    }
+
+    function updateProfilerMetrics() {
+      let totalTime = 0;
+      profilerStages.forEach(st => {
+        if (st.def.name.includes('SCAN')) {
+          st.def.time = params.profilerCompressed ? 58 : 195;
+        } else if (st.def.name.includes('BIST')) {
+          st.def.time = params.profilerParallel ? 65 : 110;
+        }
+        totalTime += st.def.time;
+
+        const newH = Math.max((st.def.time / 200) * 12, 1.2);
+        st.mesh.scale.y = newH / st.height;
+        st.mesh.position.y = newH / 2;
+        st.cap.position.y = newH + 0.1;
+
+        if (st.def.isBottleneck) {
+          const isOptimized = params.profilerCompressed;
+          const col = isOptimized ? 0x0284c7 : 0xef4444;
+          st.mesh.material.color.set(col);
+          st.mesh.material.emissive.set(col);
+          st.mesh.material.emissiveIntensity = isOptimized ? 0.3 : 0.8;
+        }
+      });
+
+      const uph = Math.round((3600 * 1000) / totalTime);
+      const cot = (totalTime * 0.000025).toFixed(4);
+
+      const elTime = document.getElementById('pf-time');
+      const elUph = document.getElementById('pf-uph');
+      const elBot = document.getElementById('pf-bot');
+      const elCot = document.getElementById('pf-cot');
+      if (elTime) elTime.textContent = `${totalTime} ms`;
+      if (elUph) elUph.textContent = `${uph.toLocaleString()} ea/h`;
+      if (elBot) elBot.textContent = params.profilerCompressed ? 'SerDes (18%)' : 'SCAN (34.2%)';
+      if (elCot) elCot.textContent = `$${cot}`;
+    }
+
+    // --- 场景 17: 车规 DPAT 离群剔除与 GDIBN (DPAT & Neighborhood) ---
+    function buildDPATScenario() {
+      clearMainGroup();
+      camera.position.set(0, 32, 38);
+      controls.target.set(0, 0, 0);
+
+      // 1. 晶圆承载台
+      const chuck = new THREE.Mesh(
+        new THREE.CylinderGeometry(17, 17, 1.6, 64),
+        new THREE.MeshStandardMaterial({ color: 0x111827, metalness: 0.8, roughness: 0.3 })
+      );
+      chuck.position.y = -1.0;
+      mainGroup.add(chuck);
+
+      const waferBase = new THREE.Mesh(
+        new THREE.CylinderGeometry(15.6, 15.6, 0.3, 64),
+        new THREE.MeshStandardMaterial({ color: 0x0f172a, metalness: 0.9 })
+      );
+      waferBase.position.y = -0.15;
+      mainGroup.add(waferBase);
+
+      // 2. 生成 Die 阵列与高斯分布参数值
+      dpatDies = [];
+      dpatOutlierRings = [];
+      const pitch = 1.6, radiusLimit = 14.2;
+      const dieGeo = new THREE.BoxGeometry(1.4, 0.4, 1.4);
+
+      let totalCount = 0;
+      const meanVal = 12.5, stdDev = 1.8; // 平均漏电 12.5uA, 标准差 1.8uA
+
+      for (let r = -9; r <= 9; r++) {
+        for (let c = -9; c <= 9; c++) {
+          const posX = c * pitch;
+          const posZ = r * pitch;
+          const dist = Math.sqrt(posX * posX + posZ * posZ);
+          if (dist > radiusLimit) continue;
+
+          // 生成服从高斯分布的参数值 (Box-Muller)
+          const u1 = Math.max(Math.random(), 1e-6), u2 = Math.random();
+          const z0 = Math.sqrt(-2.0 * Math.log(u1)) * Math.cos(2.0 * Math.PI * u2);
+          let val = meanVal + z0 * stdDev;
+
+          // 人工在特定位置植入车规典型风险：
+          // a. 离群点 (Outlier Die): 参数及格(低于25uA)但偏离正态群(如 21uA)
+          let isHardFail = false;
+          let isClusterFail = false;
+          let isGdibnTarget = false;
+
+          // 构造局部坏死簇 (Defect Cluster at X: 6, Z: -5)
+          const clusterDist = Math.sqrt((posX - 6) ** 2 + (posZ - (-5)) ** 2);
+          if (clusterDist < 2.5) {
+            if (clusterDist < 1.4) isHardFail = true; // 簇核心为坏 Die
+            else isGdibnTarget = true; // 簇边缘为虽然合格但被连坐的 GDIBN 风险 Die
+          }
+
+          if (r === -4 && c === 4) val = 21.2; // 明确的离群孤岛点
+          if (r === 3 && c === -5) val = 20.8;
+
+          const dieMat = new THREE.MeshStandardMaterial({
+            color: 0x10b981,
+            metalness: 0.3,
+            roughness: 0.4
+          });
+          const dieMesh = new THREE.Mesh(dieGeo, dieMat);
+          dieMesh.position.set(posX, 0.2, posZ);
+          mainGroup.add(dieMesh);
+
+          dpatDies.push({
+            id: totalCount++,
+            posX: posX,
+            posZ: posZ,
+            val: val,
+            mesh: dieMesh,
+            isHardFail: isHardFail,
+            isGdibnTarget: isGdibnTarget,
+            isOutlier: false,
+            isGdibnReject: false
+          });
+        }
+      }
+
+      // 3. 晶圆上方悬浮半透明车规正态分布钟形曲面带 (3D Gaussian Ribbon)
+      const curvePts = [];
+      for (let x = -14; x <= 14; x += 0.5) {
+        const normZ = (x / 14) * 3.5;
+        const gaussY = 5.0 + Math.exp(-0.5 * normZ * normZ) * 4.5;
+        curvePts.push(new THREE.Vector3(x, gaussY, -16.5));
+      }
+      const bellCurve = new THREE.CatmullRomCurve3(curvePts);
+      const bellGeo = new THREE.TubeGeometry(bellCurve, 40, 0.15, 8, false);
+      const bellMesh = new THREE.Mesh(bellGeo, new THREE.MeshBasicMaterial({ color: 0x38bdf8 }));
+      mainGroup.add(bellMesh);
+
+      updateDPATCalculation();
+    }
+
+    function updateDPATCalculation() {
+      const meanVal = 12.5, stdDev = 1.8;
+      const sigmaCutoff = meanVal + params.dpatSigma * stdDev;
+
+      let passCount = 0, outlierCount = 0, gdibnCount = 0, hardFailCount = 0;
+
+      // 清除旧光圈
+      dpatOutlierRings.forEach(r => mainGroup.remove(r));
+      dpatOutlierRings = [];
+
+      dpatDies.forEach(d => {
+        if (d.isHardFail) {
+          hardFailCount++;
+          d.mesh.material.color.set(0xef4444); // 红色硬失效
+          d.mesh.material.emissive.set(0x7f1d1d);
+          d.mesh.material.emissiveIntensity = 0.5;
+          return;
+        }
+
+        // DPAT 离群判定
+        const isSigmaOutlier = (d.val > sigmaCutoff);
+        d.isOutlier = isSigmaOutlier;
+
+        // GDIBN 邻域连坐判定
+        const isGdibn = params.dpatEnableGdibn && d.isGdibnTarget;
+        d.isGdibnReject = isGdibn;
+
+        if (isSigmaOutlier || isGdibn) {
+          if (isSigmaOutlier) outlierCount++;
+          if (isGdibn) gdibnCount++;
+
+          d.mesh.material.color.set(0xf59e0b); // 琥珀色车规警示
+          d.mesh.material.emissive.set(0xb45309);
+          d.mesh.material.emissiveIntensity = 0.8;
+
+          // 升起车规警戒全息圆环
+          const ring = new THREE.Mesh(
+            new THREE.RingGeometry(0.85, 1.05, 16).rotateX(-Math.PI / 2),
+            new THREE.MeshBasicMaterial({ color: 0xfacc15, side: THREE.DoubleSide })
+          );
+          ring.position.set(d.posX, 0.8, d.posZ);
+          mainGroup.add(ring);
+          dpatOutlierRings.push(ring);
+        } else {
+          passCount++;
+          d.mesh.material.color.set(0x10b981); // 翠绿车规合格
+          d.mesh.material.emissive.set(0x064e3b);
+          d.mesh.material.emissiveIntensity = 0.2;
+        }
+      });
+
+      const total = dpatDies.length;
+      const commYield = (((total - hardFailCount) / total) * 100).toFixed(1);
+      const autoYield = ((passCount / total) * 100).toFixed(1);
+
+      const elCut = document.getElementById('dp-cut');
+      const elOut = document.getElementById('dp-out');
+      const elGdi = document.getElementById('dp-gdi');
+      const elYld = document.getElementById('dp-yld');
+      if (elCut) elCut.textContent = `${sigmaCutoff.toFixed(2)} μA (+${params.dpatSigma.toFixed(1)}σ)`;
+      if (elOut) elOut.textContent = `${outlierCount} ea`;
+      if (elGdi) elGdi.textContent = `${gdibnCount} ea`;
+      if (elYld) elYld.textContent = `${autoYield}% (常规良率: ${commYield}%)`;
+    }
+
+    // --- 场景 18: 存储器失效位图与冗余修复 (Memory FBM & Repair) ---
+    function buildMemoryRepairScenario() {
+      clearMainGroup();
+      camera.position.set(22, 28, 30);
+      controls.target.set(0, 0, 0);
+
+      // 1. SRAM 硅片衬底基板
+      const chipBase = new THREE.Mesh(
+        new THREE.BoxGeometry(26, 1.0, 26),
+        new THREE.MeshStandardMaterial({ color: 0x09101d, metalness: 0.8, roughness: 0.3 })
+      );
+      chipBase.position.y = -0.5;
+      mainGroup.add(chipBase);
+
+      // 2. 生成 24 x 24 存储单元点阵网格 (SRAM Cell Array)
+      memCells = [];
+      const rows = 24, cols = 24, pitch = 0.85;
+      const startX = -((cols - 1) * pitch) / 2;
+      const startZ = -((rows - 1) * pitch) / 2;
+
+      const cellGeo = new THREE.BoxGeometry(0.7, 0.4, 0.7);
+
+      for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+          const posX = startX + c * pitch;
+          const posZ = startZ + r * pitch;
+
+          // 预设故障位：
+          // 行故障 (Row Fail): 行 8 为整行物理短路
+          // 列故障 (Column Fail): 列 17 为整列位线故障
+          // 单比特故障 (Single Bit): (r:15, c:6)
+          let isFail = false;
+          let failType = 'none';
+
+          if (r === 8) { isFail = true; failType = 'row'; }
+          else if (c === 17) { isFail = true; failType = 'col'; }
+          else if (r === 15 && c === 6) { isFail = true; failType = 'single'; }
+
+          const cellMat = new THREE.MeshStandardMaterial({
+            color: isFail ? (failType === 'row' ? 0xef4444 : (failType === 'col' ? 0xf59e0b : 0xa855f7)) : 0x0284c7,
+            metalness: 0.4,
+            roughness: 0.3,
+            emissive: isFail ? 0xef4444 : 0x0284c7,
+            emissiveIntensity: isFail ? 0.8 : 0.2
+          });
+          const cellMesh = new THREE.Mesh(cellGeo, cellMat);
+          cellMesh.position.set(posX, 0.2, posZ);
+          mainGroup.add(cellMesh);
+
+          memCells.push({
+            r: r, c: c, posX: posX, posZ: posZ,
+            isFail: isFail, failType: failType,
+            mesh: cellMesh, isRepaired: false
+          });
+        }
+      }
+
+      // 3. 阵列边缘备用硬件单元 (Spare Rows & Spare Columns)
+      spareRows = [];
+      spareCols = [];
+
+      // 备用行 (Spare Row Bars on the right)
+      for (let i = 0; i < params.memSpareRows; i++) {
+        const srMesh = new THREE.Mesh(
+          new THREE.BoxGeometry(20.5, 0.4, 0.7),
+          new THREE.MeshStandardMaterial({ color: 0x10b981, metalness: 0.6, emissive: 0x10b981, emissiveIntensity: 0.3 })
+        );
+        srMesh.position.set(0, 0.2, 11.5 + i * 1.2);
+        mainGroup.add(srMesh);
+        spareRows.push({ idx: i, mesh: srMesh, targetRow: 8 });
+      }
+
+      // 备用列 (Spare Column Bars on the left)
+      for (let j = 0; j < params.memSpareCols; j++) {
+        const scMesh = new THREE.Mesh(
+          new THREE.BoxGeometry(0.7, 0.4, 20.5),
+          new THREE.MeshStandardMaterial({ color: 0x10b981, metalness: 0.6, emissive: 0x10b981, emissiveIntensity: 0.3 })
+        );
+        scMesh.position.set(11.5 + j * 1.2, 0.2, 0);
+        mainGroup.add(scMesh);
+        spareCols.push({ idx: j, mesh: scMesh, targetCol: 17 });
+      }
+
+      memRepairDone = false;
+      updateMemoryMetrics();
+    }
+
+    function triggerMemoryRepair() {
+      if (memRepairDone) return;
+      memRepairDone = true;
+
+      // 动态滑入备用行与备用列激光重构连线
+      memCells.forEach(cell => {
+        if (cell.isFail) {
+          cell.isRepaired = true;
+          cell.mesh.material.color.set(0x10b981); // 变绿，修复成功
+          cell.mesh.material.emissive.set(0x064e3b);
+          cell.mesh.material.emissiveIntensity = 0.5;
+        }
+      });
+
+      // 备用行高亮
+      spareRows.forEach(sr => sr.mesh.material.emissiveIntensity = 0.9);
+      spareCols.forEach(sc => sc.mesh.material.emissiveIntensity = 0.9);
+
+      updateMemoryMetrics();
+    }
+
+    function resetMemoryGrid() {
+      buildMemoryRepairScenario();
+    }
+
+    function updateMemoryMetrics() {
+      const elBits = document.getElementById('mem-bits');
+      const elStatus = document.getElementById('mem-status');
+      const elSpare = document.getElementById('mem-spare');
+      const elYield = document.getElementById('mem-yield');
+      if (elBits) elBits.textContent = '49 Fail Bits (1 Row, 1 Col, 1 Single)';
+      if (elStatus) {
+        elStatus.textContent = memRepairDone ? '100% REPAIRED (已修复)' : 'FAILED (待片上重配置)';
+        elStatus.className = memRepairDone ? 'text-emerald-400 font-bold' : 'text-rose-400 font-bold';
+      }
+      if (elSpare) elSpare.textContent = memRepairDone ? '已消耗 1行 / 1列 (剩余 1行 / 1列)' : '2 备用行 / 2 备用列 (可用)';
+      if (elYield) elYield.textContent = memRepairDone ? '修复后良率: 99.8%' : '未修复良率: 0% (整颗报废)';
+    }
+
+    // --- 场景 19: 四线制 Kelvin 接触与继电器矩阵 (Kelvin Matrix) ---
+    function buildKelvinMatrixScenario() {
+      clearMainGroup();
+      camera.position.set(0, 22, 34);
+      controls.target.set(0, 3, 0);
+
+      kelvinRelays = [];
+      kelvinParticles = [];
+
+      // 1. 基底机箱面板
+      const panel = new THREE.Mesh(
+        new THREE.BoxGeometry(32, 1.2, 22),
+        new THREE.MeshStandardMaterial({ color: 0x0f172a, metalness: 0.7, roughness: 0.4 })
+      );
+      panel.position.y = -0.6;
+      mainGroup.add(panel);
+
+      // 2. 左侧仪器模块 (SMU Source Measure Unit)
+      const smuBox = new THREE.Mesh(
+        new THREE.BoxGeometry(7, 4.5, 14),
+        new THREE.MeshStandardMaterial({ color: 0x1e293b, metalness: 0.5 })
+      );
+      smuBox.position.set(-11, 2.25, 0);
+      mainGroup.add(smuBox);
+
+      // 3. 右侧芯片测试座 DUT Pin
+      const dutBox = new THREE.Mesh(
+        new THREE.BoxGeometry(6, 4.0, 10),
+        new THREE.MeshStandardMaterial({ color: 0x1e293b, metalness: 0.8 })
+      );
+      dutBox.position.set(11, 2.0, 0);
+      mainGroup.add(dutBox);
+
+      const dutPin = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.4, 0.4, 3, 16),
+        new THREE.MeshStandardMaterial({ color: 0xf59e0b, metalness: 0.95 })
+      );
+      dutPin.position.set(11, 4.0, 0);
+      mainGroup.add(dutPin);
+
+      // 4. Force 驱动回路 (黄铜粗管) & Sense 测量回路 (青色细管)
+      // Force+ 导线
+      const fCurve = new THREE.CatmullRomCurve3([
+        new THREE.Vector3(-7.5, 3.5, -3.5),
+        new THREE.Vector3(-2.0, 3.5, -3.5),
+        new THREE.Vector3(2.0, 3.5, -3.5),
+        new THREE.Vector3(8.0, 3.5, -1.5)
+      ]);
+      const fLine = new THREE.Mesh(
+        new THREE.TubeGeometry(fCurve, 32, 0.22, 8, false),
+        new THREE.MeshStandardMaterial({ color: 0xf59e0b, metalness: 0.8, roughness: 0.2 })
+      );
+      mainGroup.add(fLine);
+
+      // Sense+ 导线
+      const sCurve = new THREE.CatmullRomCurve3([
+        new THREE.Vector3(-7.5, 1.8, 3.5),
+        new THREE.Vector3(-2.0, 1.8, 3.5),
+        new THREE.Vector3(2.0, 1.8, 3.5),
+        new THREE.Vector3(8.0, 1.8, 1.5)
+      ]);
+      const sLine = new THREE.Mesh(
+        new THREE.TubeGeometry(sCurve, 32, 0.1, 8, false),
+        new THREE.MeshStandardMaterial({ color: 0x38bdf8, metalness: 0.9, emissive: 0x38bdf8, emissiveIntensity: 0.4 })
+      );
+      mainGroup.add(sLine);
+
+      // 5. 机械继电器模型 (Transparent Reed Relays)
+      function createRelay(posX, posY, posZ, label) {
+        const rGroup = new THREE.Group();
+        const glass = new THREE.Mesh(
+          new THREE.BoxGeometry(3.6, 2.2, 2.2),
+          new THREE.MeshPhysicalMaterial({ color: 0xffffff, transparent: true, opacity: 0.4, transmission: 0.8, roughness: 0.1 })
+        );
+        rGroup.add(glass);
+
+        // 内部金属簧片触点
+        const contact = new THREE.Mesh(
+          new THREE.BoxGeometry(2.4, 0.2, 0.4),
+          new THREE.MeshStandardMaterial({ color: 0x10b981, metalness: 0.9 })
+        );
+        contact.position.y = 0.2;
+        rGroup.add(contact);
+
+        rGroup.position.set(posX, posY, posZ);
+        mainGroup.add(rGroup);
+        return { group: rGroup, contact: contact, isClosed: true };
+      }
+
+      kelvinRelays.push(createRelay(0, 3.5, -3.5, 'K_FORCE'));
+      kelvinRelays.push(createRelay(0, 1.8, 3.5, 'K_SENSE'));
+
+      // 6. 电流光子流粒子
+      for (let i = 0; i < 10; i++) {
+        const p = new THREE.Mesh(new THREE.SphereGeometry(0.18, 8, 8), new THREE.MeshBasicMaterial({ color: 0xfef08a }));
+        mainGroup.add(p);
+        kelvinParticles.push({ mesh: p, progress: i / 10, curve: fCurve });
+      }
+
+      updateKelvinMetrics();
+    }
+
+    function toggleKelvinRelaySwitch() {
+      params.kelvinRelayClosed = !params.kelvinRelayClosed;
+      kelvinRelays.forEach(r => {
+        r.isClosed = params.kelvinRelayClosed;
+        r.contact.material.color.set(params.kelvinRelayClosed ? 0x10b981 : 0xef4444);
+        r.contact.rotation.z = params.kelvinRelayClosed ? 0 : 0.35;
+      });
+      updateKelvinMetrics();
+    }
+
+    function toggleSenseBrokenFault() {
+      kelvinSenseFault = !kelvinSenseFault;
+      updateKelvinMetrics();
+    }
+
+    function updateKelvinMetrics() {
+      const elStatus = document.getElementById('kv-status');
+      const elVdut = document.getElementById('kv-vdut');
+      const elRwire = document.getElementById('kv-rwire');
+      const elMode = document.getElementById('kv-mode');
+
+      if (!params.kelvinRelayClosed) {
+        if (elStatus) elStatus.textContent = 'RELAY OPEN (断开隔离)';
+        if (elVdut) elVdut.textContent = '0.000 V';
+        if (elMode) elMode.textContent = 'High-Z (高阻防护)';
+        return;
+      }
+
+      if (kelvinSenseFault) {
+        if (elStatus) {
+          elStatus.textContent = 'KELVIN SENSE FAIL (四线断路)';
+          elStatus.className = 'text-rose-400 font-bold';
+        }
+        if (elVdut) elVdut.textContent = '2.450 V (虚高失真 +104%)';
+        if (elRwire) elRwire.textContent = '无法消除 (寄生误差 1.25Ω)';
+      } else {
+        if (elStatus) {
+          elStatus.textContent = '4-WIRE KELVIN LOCKED (受控闭环)';
+          elStatus.className = 'text-emerald-400 font-bold';
+        }
+        if (elVdut) elVdut.textContent = '1.2005 V (真值精度 ±0.01%)';
+        if (elRwire) elRwire.textContent = '0.000 Ω (完全抵消引线阻抗)';
+      }
+      if (elMode) elMode.textContent = 'Force 1.0A / Sense Remote';
+    }
+
+    // --- 场景 20: eFuse 电熔丝高压脉冲烧录 (eFuse Programming Matrix) ---
+    function buildEFuseScenario() {
+      clearMainGroup();
+      camera.position.set(0, 18, 26);
+      controls.target.set(0, 2, 0);
+
+      fuseBits = [];
+      fuseSparkParticles = [];
+      isFuseBurning = false;
+
+      // 1. 芯片硅基底板
+      const chipDie = new THREE.Mesh(
+        new THREE.BoxGeometry(22, 1.0, 18),
+        new THREE.MeshStandardMaterial({ color: 0x091422, metalness: 0.8, roughness: 0.2 })
+      );
+      chipDie.position.y = -0.5;
+      mainGroup.add(chipDie);
+
+      // 2. 排布 16 x 8 = 128 颗 eFuse 物理微观熔丝矩阵
+      const cols = 16, rows = 8;
+      const pitchX = 1.1, pitchZ = 1.5;
+      const startX = -((cols - 1) * pitchX) / 2;
+      const startZ = -((rows - 1) * pitchZ) / 2;
+
+      let bitIdx = 0;
+      for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+          const posX = startX + c * pitchX;
+          const posZ = startZ + r * pitchZ;
+
+          const fuseGroup = new THREE.Group();
+          fuseGroup.position.set(posX, 0.1, posZ);
+
+          // 两端金焊盘
+          const padGeo = new THREE.BoxGeometry(0.35, 0.15, 0.4);
+          const padMat = new THREE.MeshStandardMaterial({ color: 0xf59e0b, metalness: 0.9 });
+          const pad1 = new THREE.Mesh(padGeo, padMat); pad1.position.z = -0.35; fuseGroup.add(pad1);
+          const pad2 = new THREE.Mesh(padGeo, padMat); pad2.position.z = 0.35; fuseGroup.add(pad2);
+
+          // 中间微观多晶硅细颈熔桥 (Link Neck)
+          const linkGeo = new THREE.CylinderGeometry(0.08, 0.08, 0.45, 8).rotateX(Math.PI / 2);
+          const linkMat = new THREE.MeshStandardMaterial({ color: 0xfacc15, metalness: 0.95 });
+          const linkMesh = new THREE.Mesh(linkGeo, linkMat);
+          fuseGroup.add(linkMesh);
+
+          mainGroup.add(fuseGroup);
+
+          // 默认前 32 位被提前烧录过作为生产批次号
+          const isPreBurned = (bitIdx < 24 && (bitIdx % 2 === 1));
+          if (isPreBurned) {
+            linkMesh.material.color.set(0x1e293b); // 烧断变黑
+            linkMesh.scale.set(0.2, 0.2, 0.2);
+          }
+
+          fuseBits.push({
+            id: bitIdx++,
+            r: r, c: c,
+            group: fuseGroup,
+            link: linkMesh,
+            isBurned: isPreBurned,
+            targetBurn: false
+          });
+        }
+      }
+
+      // 3. 悬停在上方的高压脉冲烧录探针头 (2.5V Burn Probe)
+      const burnHead = new THREE.Group();
+      burnHead.add(new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.3, 3, 16), new THREE.MeshStandardMaterial({ color: 0x64748b, metalness: 0.9 })));
+      const tip = new THREE.Mesh(new THREE.ConeGeometry(0.3, 1.2, 16).rotateX(Math.PI), new THREE.MeshBasicMaterial({ color: 0xef4444 }));
+      tip.position.y = -1.8; burnHead.add(tip);
+      burnHead.position.set(0, 6, 0);
+      mainGroup.add(burnHead);
+
+      updateEFuseMetrics();
+    }
+
+    function triggerFuseBurn() {
+      if (isFuseBurning) return;
+      isFuseBurning = true;
+      burnCurrentBit = 24; // 从第 24 位开始持续烧入 16 位密匙
+
+      // 创建电火花粒子
+      fuseSparkParticles = [];
+      const spGeo = new THREE.SphereGeometry(0.12, 6, 6);
+      const spMat = new THREE.MeshBasicMaterial({ color: 0xfef08a });
+      for (let i = 0; i < 20; i++) {
+        const sp = new THREE.Mesh(spGeo, spMat);
+        mainGroup.add(sp);
+        fuseSparkParticles.push(sp);
+      }
+    }
+
+    function updateEFuseMetrics() {
+      let burnedCount = 0;
+      fuseBits.forEach(b => { if (b.isBurned) burnedCount++; });
+
+      const elCount = document.getElementById('ef-count');
+      const elVolt = document.getElementById('ef-volt');
+      const elVerify = document.getElementById('ef-verify');
+      const elKey = document.getElementById('ef-key');
+
+      if (elCount) elCount.textContent = `${burnedCount} / 128 Bits (烧断率 ${(burnedCount/128*100).toFixed(1)}%)`;
+      if (elVolt) elVolt.textContent = isFuseBurning ? '2.50 V (20mA Pulse 施加中)' : '0.00 V (待机)';
+      if (elVerify) elVerify.textContent = burnedCount > 30 ? 'PASS (Margin Read 0/1 双裕量通过)' : 'READY';
+      if (elKey) elKey.textContent = `0xA7C9_F482_3D90_${burnedCount > 30 ? 'B1E4' : '0000'}`;
+    }
+
     // --- Raycaster 悬浮 Tooltip 与 点击打标 ---
     function setupRaycasterEvents() {
       const raycaster = new THREE.Raycaster();
@@ -1209,6 +2470,229 @@
           <div>机台报警: <span class="text-rose-400 font-bold">Jam</span></div>
         `;
         buildFabTwinScenario();
+
+      } else if (name === 'waferMap') {
+        panelTitle.textContent = '晶圆图谱步进测试 (Wafer Map)';
+        panelBadge.textContent = 'Prober & Binning';
+        controlsContainer.innerHTML = `
+          <div>
+            <div class="flex justify-between text-slate-300 mb-1">
+              <span>探针步进速度 (Step Speed):</span>
+              <span id="val-wmspeed" class="font-mono text-cyan-400">${params.waferStepSpeed.toFixed(1)}x</span>
+            </div>
+            <input type="range" min="0.5" max="4.0" step="0.5" value="${params.waferStepSpeed}" class="w-full accent-cyan-500" oninput="params.waferStepSpeed=parseFloat(this.value); document.getElementById('val-wmspeed').textContent=this.value+'x';" />
+          </div>
+          <div>
+            <label class="text-slate-300 block mb-1">工艺失效模式注入 (Defect Model):</label>
+            <select class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1.5 text-slate-200" onchange="params.waferPattern=this.value; buildWaferMapScenario();">
+              <option value="random">随机散布缺陷 (Random, ~94% Yield)</option>
+              <option value="ring">边缘环状失效 (Ring Fail - CMP/Gas)</option>
+              <option value="scratch">晶圆划痕缺陷 (Scratch Fail - Handler)</option>
+              <option value="center">中心热点聚集 (Center Spot - Litho)</option>
+            </select>
+          </div>
+          <div class="grid grid-cols-2 gap-2 pt-1">
+            <button onclick="runAllWaferInstant()" class="py-1.5 px-2 rounded bg-cyan-700 hover:bg-cyan-600 text-white font-medium text-xs transition-all text-center">
+              ⚡ 一键测完
+            </button>
+            <button onclick="resetWaferTest()" class="py-1.5 px-2 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-600 font-medium text-xs transition-all text-center">
+              🔄 重新步进
+            </button>
+          </div>
+          <div class="p-2 rounded bg-slate-950/70 border border-slate-800 text-[10px] space-y-1 text-slate-300">
+            <div class="flex items-center gap-1.5"><span class="w-2 h-2 rounded bg-emerald-500"></span><span>Bin 1: Pass (合格芯粒)</span></div>
+            <div class="flex items-center gap-1.5"><span class="w-2 h-2 rounded bg-rose-500"></span><span>Bin 2: OS Fail (开短路)</span></div>
+            <div class="flex items-center gap-1.5"><span class="w-2 h-2 rounded bg-amber-500"></span><span>Bin 3: Leakage (静态漏电超标)</span></div>
+            <div class="flex items-center gap-1.5"><span class="w-2 h-2 rounded bg-purple-500"></span><span>Bin 4: Functional (逻辑测试失效)</span></div>
+          </div>
+        `;
+        metricsContainer.innerHTML = `
+          <div>已测 Die 数: <span id="wm-tested" class="text-cyan-400 font-bold">0 / 0</span></div>
+          <div>实时良率: <span id="wm-yield" class="text-emerald-400 font-bold">100%</span></div>
+          <div>良品 Bin 1: <span id="wm-bin1" class="text-emerald-400">0 ea</span></div>
+          <div>不良总数: <span id="wm-fail" class="text-rose-400 font-bold">0 ea</span></div>
+        `;
+        buildWaferMapScenario();
+
+      } else if (name === 'multiSite') {
+        panelTitle.textContent = '64-Site 同测与阻抗 (Multi-Site)';
+        panelBadge.textContent = 'Parallel Test';
+        controlsContainer.innerHTML = `
+          <div>
+            <div class="flex justify-between text-slate-300 mb-1">
+              <span>探针下压力 (Overdrive Force):</span>
+              <span id="val-msforce" class="font-mono text-cyan-400">${params.multiSiteForce} g/pin</span>
+            </div>
+            <input type="range" min="40" max="140" step="5" value="${params.multiSiteForce}" class="w-full accent-cyan-500" oninput="params.multiSiteForce=parseInt(this.value); document.getElementById('val-msforce').textContent=this.value+' g/pin'; updateMultiSiteCres();" />
+          </div>
+          <div class="grid grid-cols-2 gap-2 pt-1">
+            <button onclick="triggerAutoCleanProbes()" class="py-2 px-2 rounded bg-purple-600 hover:bg-purple-500 text-white font-medium text-[11px] transition-all flex items-center justify-center gap-1">
+              ✨ 自动清针打磨
+            </button>
+            <button onclick="toggleMaskFailSites()" class="py-2 px-2 rounded bg-rose-700 hover:bg-rose-600 text-white font-medium text-[11px] transition-all flex items-center justify-center gap-1">
+              🚫 屏蔽异常工位
+            </button>
+          </div>
+          <div class="p-2 rounded bg-slate-950/70 border border-slate-800 text-[10px] text-slate-300">
+            Site #19 与 #44 探针发生严重氧化，阻抗 > 500mΩ 触发警报。点击“自动清针打磨”可恢复。
+          </div>
+        `;
+        metricsContainer.innerHTML = `
+          <div>活跃工位: <span id="ms-sites" class="text-cyan-400 font-bold">64 / 64 Sites</span></div>
+          <div>平均 Cres: <span id="ms-avg" class="text-emerald-400">114 mΩ</span></div>
+          <div>最高 Cres: <span id="ms-max" class="text-rose-400 font-bold">680 mΩ</span></div>
+          <div>同测综合效率: <span id="ms-eff" class="text-emerald-400 font-bold">98.4%</span></div>
+        `;
+        buildMultiSiteScenario();
+
+      } else if (name === 'shmoo3d') {
+        panelTitle.textContent = '3D Shmoo 工作窗口 (Shmoo 3D)';
+        panelBadge.textContent = 'Margin Volume';
+        controlsContainer.innerHTML = `
+          <div>
+            <div class="flex justify-between text-slate-300 mb-1">
+              <span>环境温度切片 (Temp Slice):</span>
+              <span id="val-shtemp" class="font-mono text-cyan-400">${params.shmooTempSlice} ℃</span>
+            </div>
+            <input type="range" min="-40" max="125" step="5" value="${params.shmooTempSlice}" class="w-full accent-cyan-500" oninput="params.shmooTempSlice=parseInt(this.value); document.getElementById('val-shtemp').textContent=this.value+' ℃'; updateShmooSlice();" />
+          </div>
+          <div class="p-2.5 rounded bg-cyan-950/50 border border-cyan-800 text-[10px] text-slate-300 space-y-1">
+            <div>• 绿色球体: 芯片正常工作点 (Pass Envelope)</div>
+            <div>• 观察发现: 高温 125℃ 时载流子迁移率下降，Fmax 显著缩减约 190MHz。</div>
+          </div>
+        `;
+        metricsContainer.innerHTML = `
+          <div>最大稳定频率: <span id="sh-fmax" class="text-cyan-400 font-bold">1,080 MHz</span></div>
+          <div>最低启动电压: <span id="sh-vmin" class="text-emerald-400">0.68 V</span></div>
+          <div>工作安全裕量: <span id="sh-margin" class="text-emerald-400 font-bold">+18.5%</span></div>
+          <div>扫描点数: <span class="text-slate-300">600 Points</span></div>
+        `;
+        buildShmoo3DScenario();
+
+      } else if (name === 'testProfiler') {
+        panelTitle.textContent = '测试流程耗时分析 (Test Flow)';
+        panelBadge.textContent = 'Time & Cost';
+        controlsContainer.innerHTML = `
+          <div class="space-y-2">
+            <div class="flex items-center justify-between p-2 rounded bg-slate-900 border border-slate-700">
+              <span class="text-slate-200">ATPG 向量硬件压缩</span>
+              <input type="checkbox" id="chk-compress" ${params.profilerCompressed ? 'checked' : ''} class="accent-cyan-500" onchange="params.profilerCompressed=this.checked; updateProfilerMetrics();" />
+            </div>
+            <div class="flex items-center justify-between p-2 rounded bg-slate-900 border border-slate-700">
+              <span class="text-slate-200">多线程并发执行 (DC+BIST)</span>
+              <input type="checkbox" id="chk-parallel" ${params.profilerParallel ? 'checked' : ''} class="accent-cyan-500" onchange="params.profilerParallel=this.checked; updateProfilerMetrics();" />
+            </div>
+          </div>
+          <div class="p-2 rounded bg-rose-950/40 border border-rose-800/60 text-[10px] text-slate-300">
+            🔴 阶段 5 (SCAN / ATPG) 耗时 195ms，占整机测试时间 34.2%，为当前产线最大产能瓶颈！
+          </div>
+        `;
+        metricsContainer.innerHTML = `
+          <div>单颗总耗时: <span id="pf-time" class="text-cyan-400 font-bold">570 ms</span></div>
+          <div>综合产出 UPH: <span id="pf-uph" class="text-emerald-400 font-bold">6,315 ea/h</span></div>
+          <div>最大瓶颈项: <span id="pf-bot" class="text-rose-400 font-bold">SCAN (34.2%)</span></div>
+          <div>单颗测试成本: <span id="pf-cot" class="text-amber-400">$0.0142</span></div>
+        `;
+        buildTestProfilerScenario();
+
+      } else if (name === 'dpat') {
+        panelTitle.textContent = '车规 DPAT 离群剔除 (DPAT)';
+        panelBadge.textContent = 'AEC-Q100 Zero Defect';
+        controlsContainer.innerHTML = `
+          <div>
+            <div class="flex justify-between text-slate-300 mb-1">
+              <span>DPAT 统计容差门限 (Sigma Cutoff):</span>
+              <span id="val-dpsigma" class="font-mono text-cyan-400">±${params.dpatSigma.toFixed(1)} σ</span>
+            </div>
+            <input type="range" min="2.0" max="4.5" step="0.1" value="${params.dpatSigma}" class="w-full accent-cyan-500" oninput="params.dpatSigma=parseFloat(this.value); document.getElementById('val-dpsigma').textContent='±'+this.value+' σ'; updateDPATCalculation();" />
+          </div>
+          <div class="flex items-center justify-between p-2 rounded bg-slate-900 border border-slate-700">
+            <span class="text-slate-200">启用 GDIBN 恶劣邻域连坐剔除</span>
+            <input type="checkbox" id="chk-gdibn" ${params.dpatEnableGdibn ? 'checked' : ''} class="accent-cyan-500" onchange="params.dpatEnableGdibn=this.checked; updateDPATCalculation();" />
+          </div>
+          <div class="p-2 rounded bg-amber-950/40 border border-amber-800/60 text-[10px] text-slate-300">
+            车规级质量防线：即便参数在规格限内，偏离高斯正态群（Outlier）或被坏品环绕（GDIBN）的 Die 强制剔除！
+          </div>
+        `;
+        metricsContainer.innerHTML = `
+          <div>统计门限: <span id="dp-cut" class="text-cyan-400 font-bold">17.9 μA</span></div>
+          <div>离群剔除: <span id="dp-out" class="text-amber-400 font-bold">2 ea</span></div>
+          <div>邻域连坐: <span id="dp-gdi" class="text-rose-400 font-bold">3 ea</span></div>
+          <div>车规良率: <span id="dp-yld" class="text-emerald-400 font-bold">96.8%</span></div>
+        `;
+        buildDPATScenario();
+
+      } else if (name === 'memRepair') {
+        panelTitle.textContent = '存储器失效与冗余修复 (Memory)';
+        panelBadge.textContent = 'BIST & Redundancy';
+        controlsContainer.innerHTML = `
+          <div class="grid grid-cols-2 gap-2">
+            <button onclick="triggerMemoryRepair()" class="py-2 px-2 rounded bg-emerald-600 hover:bg-emerald-500 text-white font-medium text-[11px] transition-all flex items-center justify-center gap-1 shadow">
+              🛠️ 片上冗余重构
+            </button>
+            <button onclick="resetMemoryGrid()" class="py-2 px-2 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-600 font-medium text-[11px] transition-all flex items-center justify-center gap-1">
+              🔄 注入新失效
+            </button>
+          </div>
+          <div class="p-2 rounded bg-slate-950/70 border border-slate-800 text-[10px] space-y-1 text-slate-300">
+            <div class="flex items-center gap-1.5"><span class="w-2 h-2 rounded bg-rose-500"></span><span>Row Fail: 第 8 行字线短路</span></div>
+            <div class="flex items-center gap-1.5"><span class="w-2 h-2 rounded bg-amber-500"></span><span>Col Fail: 第 17 列表位线漏电</span></div>
+            <div class="flex items-center gap-1.5"><span class="w-2 h-2 rounded bg-emerald-500"></span><span>Spare Rail: 绿色备用行列重配置</span></div>
+          </div>
+        `;
+        metricsContainer.innerHTML = `
+          <div>故障单元: <span id="mem-bits" class="text-rose-400 font-bold">49 Fail Bits</span></div>
+          <div>修复状态: <span id="mem-status" class="text-rose-400 font-bold">待修复</span></div>
+          <div>备用硬件: <span id="mem-spare" class="text-slate-300">2行 / 2列</span></div>
+          <div>良率增益: <span id="mem-yield" class="text-emerald-400 font-bold">+99.8%</span></div>
+        `;
+        buildMemoryRepairScenario();
+
+      } else if (name === 'kelvin') {
+        panelTitle.textContent = '四线制 Kelvin 继电器 (Kelvin)';
+        panelBadge.textContent = 'Force/Sense Topology';
+        controlsContainer.innerHTML = `
+          <div class="grid grid-cols-2 gap-2">
+            <button onclick="toggleKelvinRelaySwitch()" class="py-2 px-2 rounded bg-blue-600 hover:bg-blue-500 text-white font-medium text-[11px] transition-all flex items-center justify-center gap-1">
+              🔲 继电器开关切换
+            </button>
+            <button onclick="toggleSenseBrokenFault()" class="py-2 px-2 rounded bg-rose-700 hover:bg-rose-600 text-white font-medium text-[11px] transition-all flex items-center justify-center gap-1">
+              ⚠️ 模拟 Sense 断路
+            </button>
+          </div>
+          <div class="p-2 rounded bg-slate-950/70 border border-slate-800 text-[10px] space-y-1 text-slate-300">
+            <div>• 黄色粗管: Force 驱动大电流通道 (1.0A)</div>
+            <div>• 青色细管: Sense 高阻电压遥测回路 (消除线阻)</div>
+            <div>• 玻璃箱体: Reed Relay 物理簧片动作</div>
+          </div>
+        `;
+        metricsContainer.innerHTML = `
+          <div>开尔文状态: <span id="kv-status" class="text-emerald-400 font-bold">LOCKED</span></div>
+          <div>DUT 真实端压: <span id="kv-vdut" class="text-cyan-400 font-bold">1.2005 V</span></div>
+          <div>寄生线阻消除: <span id="kv-rwire" class="text-emerald-400">0.000 Ω</span></div>
+          <div>回路拓扑: <span id="kv-mode" class="text-slate-300">Remote Sense</span></div>
+        `;
+        buildKelvinMatrixScenario();
+
+      } else if (name === 'efuse') {
+        panelTitle.textContent = 'eFuse 熔丝脉冲烧录 (eFuse)';
+        panelBadge.textContent = '128-Bit OTP Trim';
+        controlsContainer.innerHTML = `
+          <button onclick="triggerFuseBurn()" class="w-full py-2 px-3 rounded bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs transition-all flex items-center justify-center gap-1.5 shadow-lg">
+            ⚡ 施加 2.5V 高压脉冲电弧烧断 (Burn)
+          </button>
+          <div class="p-2.5 rounded bg-amber-950/40 border border-amber-800/60 text-[10px] text-slate-300 space-y-1">
+            <div>• 物理机制: 20mA 电流击穿多晶硅微桥颈部，永久开路。</div>
+            <div>• 出厂写入: 芯片唯一种植密钥 (Security Key) 与模拟校准。</div>
+          </div>
+        `;
+        metricsContainer.innerHTML = `
+          <div>熔丝状态: <span id="ef-count" class="text-cyan-400 font-bold">12 / 128 Bits</span></div>
+          <div>烧录电压: <span id="ef-volt" class="text-slate-300">0.00 V</span></div>
+          <div>校验结论: <span id="ef-verify" class="text-emerald-400 font-bold">READY</span></div>
+          <div>芯片密钥: <span id="ef-key" class="text-amber-400 font-mono text-[10px]">0xA7C9...</span></div>
+        `;
+        buildEFuseScenario();
       }
     }
 
@@ -1258,13 +2742,345 @@
         ohtVehicle.position.x = Math.sin(time * 0.8) * 20;
       }
 
+      // --- ATE 场景动画 ---
+      if (currentScenario === 'waferMap' && waferProbeArm && waferDies.length > 0) {
+        if (currentDieIdx < waferDies.length) {
+          const curDie = waferDies[currentDieIdx];
+          waferProbeArm.position.x += (curDie.posX - waferProbeArm.position.x) * 0.35;
+          waferProbeArm.position.z += (curDie.posZ - waferProbeArm.position.z) * 0.35;
+          waferProbeArm.position.y = Math.sin(time * 16 * params.waferStepSpeed) * 0.35;
+
+          waferStepTimer += 0.016 * params.waferStepSpeed;
+          if (waferStepTimer > 0.09) {
+            applyDieResult(curDie);
+            currentDieIdx++;
+            waferStepTimer = 0;
+            updateWaferMetrics();
+          }
+        }
+      }
+
+      if (currentScenario === 'multiSite') {
+        multiSiteUnits.forEach(u => {
+          if (u.currentCres > 350 && !u.isMasked) {
+            u.pillar.material.emissiveIntensity = 0.5 + Math.sin(time * 7) * 0.5;
+          }
+        });
+
+        if (isCleaningAnim && cleaningArmMesh) {
+          cleanProgress += 0.012;
+          cleaningArmMesh.position.z = -18 + cleanProgress * 36;
+          cleaningArmMesh.position.y = 1.6 + Math.sin(cleanProgress * Math.PI) * 0.4;
+          if (cleanProgress >= 1.0) {
+            isCleaningAnim = false;
+            cleaningArmMesh.position.set(0, 8, -20);
+            updateMultiSiteCres();
+          }
+        }
+      }
+
+      if (currentScenario === 'shmoo3d') {
+        if (shmooSliceMesh) {
+          shmooSliceMesh.material.opacity = 0.3 + Math.sin(time * 3) * 0.1;
+        }
+      }
+
+      if (currentScenario === 'testProfiler') {
+        profilerParticles.forEach((p, i) => {
+          p.progress = (p.progress + 0.008) % 1.0;
+          p.mesh.position.x = -16 + p.progress * 32;
+          p.mesh.position.y = 1.2 + Math.sin(p.progress * Math.PI * 8) * 0.4;
+        });
+
+        const scanStage = profilerStages.find(s => s.def.name.includes('SCAN'));
+        if (scanStage && !params.profilerCompressed) {
+          scanStage.mesh.material.emissiveIntensity = 0.4 + Math.sin(time * 6) * 0.5;
+        }
+      }
+
+      // --- 场景 17: DPAT 全息警示环旋转与呼吸 ---
+      if (currentScenario === 'dpat' && dpatOutlierRings.length > 0) {
+        dpatOutlierRings.forEach((ring, idx) => {
+          ring.rotation.z += 0.03;
+          ring.scale.setScalar(1.0 + Math.sin(time * 5 + idx) * 0.15);
+        });
+      }
+
+      // --- 场景 18: 存储器修复激光单元光晕 ---
+      if (currentScenario === 'memRepair' && memRepairDone) {
+        spareRows.forEach((sr, idx) => {
+          sr.mesh.material.emissiveIntensity = 0.5 + Math.sin(time * 6 + idx) * 0.4;
+        });
+      }
+
+      // --- 场景 19: Kelvin 四线制电子流粒子运动 ---
+      if (currentScenario === 'kelvin' && params.kelvinRelayClosed) {
+        kelvinParticles.forEach(p => {
+          p.progress = (p.progress + 0.015) % 1.0;
+          const pos = p.curve.getPoint(p.progress);
+          p.mesh.position.copy(pos);
+          p.mesh.visible = !kelvinSenseFault || p.progress < 0.85;
+        });
+      }
+
+      // --- 场景 20: eFuse 高压脉冲烧录火花动画 ---
+      if (currentScenario === 'efuse' && isFuseBurning) {
+        burnPulseTimer = (burnPulseTimer || 0) + 0.016;
+        if (burnPulseTimer > 0.08 && burnCurrentBit < 40) {
+          const bit = fuseBits[burnCurrentBit];
+          if (bit && !bit.isBurned) {
+            bit.isBurned = true;
+            bit.link.material.color.set(0x1e293b);
+            bit.link.scale.set(0.2, 0.2, 0.2);
+            fuseSparkParticles.forEach(sp => {
+              sp.position.set(
+                bit.group.position.x + (Math.random() - 0.5) * 0.8,
+                bit.group.position.y + 0.2 + Math.random() * 0.8,
+                bit.group.position.z + (Math.random() - 0.5) * 0.8
+              );
+            });
+          }
+          burnCurrentBit++;
+          burnPulseTimer = 0;
+          updateEFuseMetrics();
+        } else if (burnCurrentBit >= 40) {
+          isFuseBurning = false;
+          fuseSparkParticles.forEach(sp => sp.position.set(0, -100, 0));
+          updateEFuseMetrics();
+        }
+      }
+
+      // 自动巡检时相机缓慢自转
+      if (isAutoTour) {
+        scene.rotation.y += 0.004;
+      }
+
       controls.update();
       renderer.render(scene, camera);
+    }
+
+    // --- 1. 场景分类过滤 (Category Filter) ---
+    function filterCategory(cat) {
+      document.querySelectorAll('.cat-pill').forEach(btn => {
+        btn.className = 'cat-pill px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 hover:text-white transition-all';
+      });
+      const curPill = document.getElementById(`cat-${cat}`);
+      if (curPill) curPill.className = 'cat-pill px-2 py-0.5 rounded-full bg-cyan-600 text-white font-medium transition-all';
+
+      document.querySelectorAll('#scenario-bar .scenario-btn').forEach(btn => {
+        const btnCat = btn.getAttribute('data-cat');
+        if (cat === 'all' || btnCat === cat) {
+          btn.style.display = 'inline-block';
+        } else {
+          btn.style.display = 'none';
+        }
+      });
+    }
+
+    // --- 2. 展厅自动巡检轮播模式 (Auto Tour Mode) ---
+    let isAutoTour = false, tourTimer = null;
+    const allScenarioNames = [
+      'focusMap', 'thermal3d', 'eyeDiagram', 'motionRobot', 'vfSurface',
+      'warpage', 'probeMark', 'stacking', 'void', 'stackedLot',
+      'wireBond', 'fabTwin', 'waferMap', 'multiSite', 'shmoo3d',
+      'testProfiler', 'dpat', 'memRepair', 'kelvin', 'efuse'
+    ];
+    let tourIdx = 0;
+
+    function toggleAutoTour() {
+      isAutoTour = !isAutoTour;
+      const btn = document.getElementById('btn-auto-tour');
+      if (isAutoTour) {
+        btn.className = 'px-2.5 py-1 rounded bg-emerald-600 text-white text-[11px] flex items-center gap-1 font-bold animate-pulse shadow';
+        btn.innerHTML = '<span>⏸</span><span>巡检中 (停止)</span>';
+        runNextTour();
+      } else {
+        btn.className = 'px-2.5 py-1 rounded bg-slate-800 hover:bg-cyan-900 border border-slate-700 hover:border-cyan-500 text-cyan-300 text-[11px] flex items-center gap-1 transition-all shadow';
+        btn.innerHTML = '<span>▶</span><span>自动巡检 (Tour)</span>';
+        clearTimeout(tourTimer);
+        scene.rotation.y = 0;
+      }
+    }
+
+    function runNextTour() {
+      if (!isAutoTour) return;
+      switchScenario(allScenarioNames[tourIdx]);
+      tourIdx = (tourIdx + 1) % allScenarioNames.length;
+      tourTimer = setTimeout(runNextTour, 12000);
+    }
+
+    // --- 3. 3D 相机视角快速切换 (Camera Viewports) ---
+    function setCameraView(type) {
+      if (type === 'top') {
+        camera.position.set(0, 52, 0.1);
+        controls.target.set(0, 0, 0);
+      } else if (type === 'front') {
+        camera.position.set(0, 6, 44);
+        controls.target.set(0, 4, 0);
+      } else if (type === 'iso') {
+        camera.position.set(34, 28, 38);
+        controls.target.set(0, 2, 0);
+      } else if (type === 'reset') {
+        camera.position.set(0, 28, 38);
+        controls.target.set(0, 0, 0);
+      }
+      controls.update();
+    }
+
+    // --- 4. SECS/GEM 工业协议报文交互终端 (E5/E30/E37) ---
+    function toggleSecsGemModal() {
+      const modal = document.getElementById('secs-gem-modal');
+      modal.style.display = (modal.style.display === 'none' || !modal.style.display) ? 'flex' : 'none';
+    }
+
+    function logSecsGemMessage(msg, colorClass = 'text-slate-300') {
+      const box = document.getElementById('secs-log-box');
+      if (!box) return;
+      const timeStr = new Date().toTimeString().split(' ')[0] + '.' + String(Date.now() % 1000).padStart(3, '0');
+      const div = document.createElement('div');
+      div.className = colorClass;
+      div.textContent = `[${timeStr}] ${msg}`;
+      box.appendChild(div);
+      box.scrollTop = box.scrollHeight;
+    }
+
+    function injectSecsRecipeTest() {
+      logSecsGemMessage('S2F41 [H->E] Host Command: PP-SELECT (PPID="SOC_ULTRA_FT_REV4.xml")', 'text-emerald-400');
+      setTimeout(() => {
+        logSecsGemMessage('S2F42 [E->H] Command Acknowledge (HCACK=0: Recipe Verified & Loaded)', 'text-cyan-400');
+      }, 400);
+    }
+
+    function injectSecsAlarmTest() {
+      logSecsGemMessage('S5F1 [E->H] Alarm Report: ALCD=128 (ALID=402, ALTX="Cres High Limit Exceeded at Site #19")', 'text-rose-400 font-bold');
+      setTimeout(() => {
+        logSecsGemMessage('S5F2 [H->E] Alarm Acknowledge (ACKC5=0: Operator Notified)', 'text-amber-400');
+      }, 500);
+    }
+
+    function clearSecsLogs() {
+      const box = document.getElementById('secs-log-box');
+      if (box) box.innerHTML = '<div class="text-slate-500">[LOGS CLEARED] Terminal Ready.</div>';
+    }
+
+    // --- 5. 导出工业测试报表 (CSV / STDF 格式) ---
+    function exportTestDataReport() {
+      let csvContent = "data:text/csv;charset=utf-8,";
+      csvContent += "Index,Die_X,Die_Y,Bin_Category,Contact_Resistance_mOhm,TestTime_ms,Status\n";
+
+      if (waferDies.length > 0) {
+        waferDies.forEach((d, idx) => {
+          const binNames = { 1: "Bin1_Pass", 2: "Bin2_OS_Fail", 3: "Bin3_Leakage", 4: "Bin4_Func" };
+          csvContent += `${idx + 1},${d.col},${d.row},${binNames[d.targetBin] || "Pass"},${(80 + Math.random()*40).toFixed(1)},${(45 + Math.random()*20).toFixed(1)},${d.targetBin===1?"PASS":"FAIL"}\n`;
+        });
+      } else {
+        for (let i = 1; i <= 64; i++) {
+          csvContent += `${i},${i%8},${Math.floor(i/8)},Bin1_Pass,112.4,520.0,PASS\n`;
+        }
+      }
+
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement("a");
+      link.setAttribute("href", encodedUri);
+      link.setAttribute("download", `ATE_Test_Summary_${Date.now()}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    // --- 6. 跨语言通信桥接 (供 Avalonia C# 上位机通过 WebView 调用) ---
+    window.updateFromHardware = function(scenarioName, payload) {
+      console.log(`[C# Interop Bridge Received] Scenario: ${scenarioName}`, payload);
+      logSecsGemMessage(`[C# Interop] Hardware Event for ${scenarioName}: ${JSON.stringify(payload)}`, 'text-cyan-300');
+
+      if (scenarioName === 'waferMap' && payload.dieIndex !== undefined) {
+        if (waferDies[payload.dieIndex]) {
+          waferDies[payload.dieIndex].targetBin = payload.binCode || 1;
+          applyDieResult(waferDies[payload.dieIndex]);
+          updateWaferMetrics();
+        }
+      } else if (scenarioName === 'kelvin') {
+        if (payload.isSenseBroken !== undefined) {
+          kelvinSenseFault = payload.isSenseBroken;
+          updateKelvinMetrics();
+        }
+      } else if (scenarioName === 'multiSite' && payload.cleanTrigger) {
+        triggerAutoCleanProbes();
+      }
+    };
+
+    function simulateCSharpEvent() {
+      if (currentScenario === 'waferMap' && waferDies.length > 0) {
+        const randIdx = Math.floor(Math.random() * waferDies.length);
+        window.updateFromHardware('waferMap', { dieIndex: randIdx, binCode: 2 });
+      } else if (currentScenario === 'kelvin') {
+        window.updateFromHardware('kelvin', { isSenseBroken: !kelvinSenseFault });
+      } else if (currentScenario === 'multiSite') {
+        window.updateFromHardware('multiSite', { cleanTrigger: true });
+      } else {
+        logSecsGemMessage('[Avalonia C# Interop] Host Sent KeepAlive & Telemetry Sync Request.', 'text-emerald-400');
+        alert('已触发 Avalonia C# Interop 数据推送！点击右上角 SECS/GEM 可查看通信报文。');
+      }
     }
 
     initThree();
     switchScenario('focusMap');
     animate();
   </script>
+
+  <!-- SECS/GEM 工业协议交互弹窗 -->
+  <div id="secs-gem-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" style="display:none;">
+    <div class="w-[660px] max-w-[94vw] panel-glass rounded-xl border border-cyan-500/40 p-4 shadow-2xl text-xs space-y-3 font-mono">
+      <div class="flex items-center justify-between border-b border-slate-700/60 pb-2">
+        <div class="flex items-center space-x-2">
+          <div class="w-3 h-3 rounded-full bg-emerald-400 animate-pulse"></div>
+          <span class="font-bold text-slate-100 text-sm">SEMI SECS/GEM 工业通信协议监视器 (E5/E30/E37)</span>
+        </div>
+        <button onclick="toggleSecsGemModal()" class="text-slate-400 hover:text-white text-base">✕</button>
+      </div>
+
+      <!-- GEM 状态机指示 -->
+      <div class="grid grid-cols-3 gap-2 text-center text-[10px]">
+        <div class="p-1.5 rounded bg-slate-900 border border-slate-700">
+          <span class="text-slate-400 block">Host Comm State</span>
+          <span class="text-emerald-400 font-bold">COMMUNICATING (S1F13)</span>
+        </div>
+        <div class="p-1.5 rounded bg-slate-900 border border-slate-700">
+          <span class="text-slate-400 block">Control State</span>
+          <span class="text-cyan-400 font-bold">REMOTE (S2F41)</span>
+        </div>
+        <div class="p-1.5 rounded bg-slate-900 border border-slate-700">
+          <span class="text-slate-400 block">Recipe In Use</span>
+          <span class="text-amber-400 font-bold">ATE_SOC_AUTO_REV3.xml</span>
+        </div>
+      </div>
+
+      <!-- 报文滚动终端区 -->
+      <div id="secs-log-box" class="h-56 overflow-y-auto bg-black/90 p-3 rounded border border-slate-800 text-[11px] font-mono space-y-1.5 select-text">
+        <div class="text-slate-500">[17:34:02.105] [HSMS] Active Connected to MES Host: 192.168.10.88:5000</div>
+        <div class="text-emerald-400">[17:34:02.120] S1F13 [H->E] Establish Communications Request</div>
+        <div class="text-cyan-400">[17:34:02.124] S1F14 [E->H] Comm Acknowledge (COMMACK=0, MDLN="SEMI-ATE-PRO", SOFTREV="3.2.0")</div>
+        <div class="text-emerald-400">[17:34:02.850] S2F41 [H->E] Host Command: PP-SELECT (PPID="ATE_SOC_AUTO_REV3.xml")</div>
+        <div class="text-cyan-400">[17:34:02.862] S2F42 [E->H] Command Acknowledge (HCACK=0: OK)</div>
+        <div class="text-emerald-400">[17:34:03.110] S2F41 [H->E] Host Command: START (LotID="LOT-2026-X88", WaferNo=01)</div>
+        <div class="text-cyan-400">[17:34:03.125] S2F42 [E->H] Command Acknowledge (HCACK=0: OK)</div>
+        <div class="text-purple-300">[17:34:04.200] S6F11 [E->H] Event Report: CEID=1001 (StepDieComplete, X=12, Y=8, Bin=1)</div>
+      </div>
+
+      <div class="flex items-center justify-between pt-1">
+        <div class="flex space-x-2">
+          <button onclick="injectSecsRecipeTest()" class="px-2.5 py-1 rounded bg-cyan-700 hover:bg-cyan-600 text-white font-medium text-[11px]">
+            ⚡ 模拟 MES 下发配方 (S2F41)
+          </button>
+          <button onclick="injectSecsAlarmTest()" class="px-2.5 py-1 rounded bg-rose-700 hover:bg-rose-600 text-white font-medium text-[11px]">
+            ⚠️ 模拟设备报警上报 (S5F1)
+          </button>
+        </div>
+        <button onclick="clearSecsLogs()" class="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 text-[11px]">
+          清空终端
+        </button>
+      </div>
+    </div>
+  </div>
 </body>
 </html>

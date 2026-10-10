@@ -38,6 +38,7 @@ TestResults/
 # 5. NuGet 包缓存
 *.nupkg
 *.snupkg
+!local-packages/*.nupkg
 packages/
 !packages/build/
 
