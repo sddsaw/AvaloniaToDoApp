@@ -20,11 +20,13 @@
             <Setter Property="BorderBrush" Value="{DynamicResource SystemControlForegroundBaseLowBrush}" />
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="CornerRadius" Value="8" />
-            <Setter Property="Padding" Value="12,10" />
+            <Setter Property="Padding" Value="10,8" />
             <Setter Property="Margin" Value="0,0,0,8" />
+            <Setter Property="DragDrop.AllowDrop" Value="True" />
             <Setter Property="Transitions">
                 <Transitions>
                     <DoubleTransition Property="Opacity" Duration="0:0:0.2" />
+                    <BrushTransition Property="BorderBrush" Duration="0:0:0.15" />
                 </Transitions>
             </Setter>
         </Style>
@@ -33,6 +35,33 @@
         </Style>
         <Style Selector="Border.task-item.completed">
             <Setter Property="Opacity" Value="0.6" />
+        </Style>
+        <Style Selector="Border.task-item.is-dragging">
+            <Setter Property="Opacity" Value="0.35" />
+        </Style>
+        <Style Selector="Border.task-item.drag-over-top">
+            <Setter Property="BorderBrush" Value="{DynamicResource SystemAccentColor}" />
+            <Setter Property="BoxShadow" Value="0 -3 0 0 #0078D4" />
+        </Style>
+        <Style Selector="Border.task-item.drag-over-bottom">
+            <Setter Property="BorderBrush" Value="{DynamicResource SystemAccentColor}" />
+            <Setter Property="BoxShadow" Value="0 3 0 0 #0078D4" />
+        </Style>
+
+        <Style Selector="Border.drag-handle">
+            <Setter Property="Cursor" Value="SizeNorthSouth" />
+            <Setter Property="Opacity" Value="0.45" />
+            <Setter Property="Transitions">
+                <Transitions>
+                    <DoubleTransition Property="Opacity" Duration="0:0:0.15" />
+                </Transitions>
+            </Setter>
+        </Style>
+        <Style Selector="Border.drag-handle:pointerover">
+            <Setter Property="Opacity" Value="1.0" />
+        </Style>
+        <Style Selector="Border.drag-handle:pointerover > PathIcon">
+            <Setter Property="Foreground" Value="{DynamicResource SystemAccentColor}" />
         </Style>
 
         <Style Selector="TextBlock.task-text.strike">
@@ -57,18 +86,37 @@
             <Setter Property="Foreground" Value="White" />
         </Style>
 
-        <Style Selector="Button.del-btn">
+        <!-- 任务项操作按钮统一基础样式 -->
+        <Style Selector="Button.action-btn">
             <Setter Property="Background" Value="Transparent" />
-            <Setter Property="Foreground" Value="#FF6B6B" />
             <Setter Property="BorderThickness" Value="0" />
-            <Setter Property="Padding" Value="8,4" />
+            <Setter Property="Padding" Value="7,5" />
             <Setter Property="CornerRadius" Value="6" />
             <Setter Property="Cursor" Value="Hand" />
-            <Setter Property="Opacity" Value="0.7" />
+            <Setter Property="Opacity" Value="0.65" />
+            <Setter Property="Transitions">
+                <Transitions>
+                    <DoubleTransition Property="Opacity" Duration="0:0:0.15" />
+                </Transitions>
+            </Setter>
+        </Style>
+        <Style Selector="Button.action-btn:pointerover">
+            <Setter Property="Opacity" Value="1.0" />
+        </Style>
+        <Style Selector="Button.edit-btn:pointerover">
+            <Setter Property="Background" Value="{DynamicResource SystemControlBackgroundBaseLowBrush}" />
+        </Style>
+        <Style Selector="Button.save-btn:pointerover">
+            <Setter Property="Background" Value="#222ECC71" />
+        </Style>
+        <Style Selector="Button.cancel-btn:pointerover">
+            <Setter Property="Background" Value="{DynamicResource SystemControlBackgroundBaseLowBrush}" />
+        </Style>
+        <Style Selector="Button.del-btn">
+            <Setter Property="Foreground" Value="#FF6B6B" />
         </Style>
         <Style Selector="Button.del-btn:pointerover">
             <Setter Property="Background" Value="#22FF0000" />
-            <Setter Property="Opacity" Value="1.0" />
         </Style>
     </UserControl.Styles>
 
@@ -166,39 +214,116 @@
         <!-- 任务列表与空状态呈现区 -->
         <Grid Grid.Row="3">
             <ScrollViewer IsVisible="{Binding !IsDisplayEmpty}">
-                <ItemsControl ItemsSource="{Binding DisplayTasks}">
+                <ItemsControl ItemsSource="{Binding DisplayTasks}"
+                              x:Name="TasksItemsControl"
+                              DragDrop.AllowDrop="True">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate x:DataType="vm:TodoItemViewModel">
                             <Border Classes="task-item"
-                                    Classes.completed="{Binding IsCompleted}">
-                                <Grid ColumnDefinitions="Auto, *, Auto, Auto">
-                                    <CheckBox Grid.Column="0"
+                                    Classes.completed="{Binding IsCompleted}"
+                                    DragDrop.AllowDrop="True"
+                                    DoubleTapped="OnItemDoubleTapped">
+                                <Grid ColumnDefinitions="Auto, Auto, *, Auto, Auto">
+                                    <!-- 列 0: 拖拽排序手柄 -->
+                                    <Border Grid.Column="0"
+                                            Classes="drag-handle"
+                                            Width="22"
+                                            Height="28"
+                                            Background="Transparent"
+                                            VerticalAlignment="Center"
+                                            HorizontalAlignment="Center"
+                                            Margin="0,0,4,0"
+                                            ToolTip.Tip="按住拖拽调整任务排序">
+                                        <PathIcon Data="{StaticResource IconDragGrip}"
+                                                  Width="12"
+                                                  Height="14"
+                                                  VerticalAlignment="Center"
+                                                  Foreground="{DynamicResource SystemControlForegroundBaseMediumLowBrush}" />
+                                    </Border>
+
+                                    <!-- 列 1: 完成状态勾选框 -->
+                                    <CheckBox Grid.Column="1"
                                               IsChecked="{Binding IsCompleted, Mode=TwoWay}"
+                                              IsEnabled="{Binding !IsEditing}"
                                               VerticalAlignment="Center"
                                               Margin="0,0,10,0" />
 
-                                    <TextBlock Grid.Column="1"
+                                    <!-- 列 2: 任务文案呈现与修改输入框 -->
+                                    <!-- 查看态：文案展示（双击可快速编辑） -->
+                                    <TextBlock Grid.Column="2"
                                                Text="{Binding Title}"
                                                Classes="task-text"
                                                Classes.strike="{Binding IsCompleted}"
+                                               IsVisible="{Binding !IsEditing}"
                                                FontSize="14"
                                                VerticalAlignment="Center"
-                                               TextWrapping="Wrap" />
+                                               TextWrapping="Wrap"
+                                               Cursor="IBeam"
+                                               ToolTip.Tip="双击直接修改文案" />
 
-                                    <TextBlock Grid.Column="2"
+                                    <!-- 编辑态：行内快速输入框 -->
+                                    <TextBox Grid.Column="2"
+                                             x:Name="EditTextBox"
+                                             Text="{Binding EditText, Mode=TwoWay}"
+                                             IsVisible="{Binding IsEditing}"
+                                             FontSize="14"
+                                             CornerRadius="6"
+                                             Padding="8,6"
+                                             VerticalContentAlignment="Center"
+                                             Watermark="输入任务文案，Enter 保存，Esc 取消..."
+                                             Loaded="EditTextBox_Loaded">
+                                        <TextBox.KeyBindings>
+                                            <KeyBinding Gesture="Enter" Command="{Binding CommitEditCommand}" />
+                                            <KeyBinding Gesture="Escape" Command="{Binding CancelEditCommand}" />
+                                        </TextBox.KeyBindings>
+                                    </TextBox>
+
+                                    <!-- 列 3: 创建时间 -->
+                                    <TextBlock Grid.Column="3"
                                                Text="{Binding CreatedAtText}"
                                                FontSize="11"
                                                Foreground="{DynamicResource SystemControlForegroundBaseMediumLowBrush}"
                                                VerticalAlignment="Center"
                                                Margin="12,0" />
 
-                                    <Button Grid.Column="3"
-                                            Classes="del-btn"
-                                            ToolTip.Tip="删除任务"
-                                            Command="{Binding #RootTodoView.((vm:TodoViewModel)DataContext).RemoveTaskCommand}"
-                                            CommandParameter="{Binding .}">
-                                        <PathIcon Data="{StaticResource IconTrash}" Width="13" Height="13" Foreground="#FF6B6B" />
-                                    </Button>
+                                    <!-- 列 4: 操作按钮区 -->
+                                    <StackPanel Grid.Column="4"
+                                                Orientation="Horizontal"
+                                                Spacing="4"
+                                                VerticalAlignment="Center">
+                                        <!-- 查看态按钮: 编辑 与 删除 -->
+                                        <Button Classes="action-btn edit-btn"
+                                                IsVisible="{Binding !IsEditing}"
+                                                ToolTip.Tip="修改文案 (双击文字亦可)"
+                                                Command="{Binding StartEditCommand}">
+                                            <PathIcon Data="{StaticResource IconEdit}" Width="13" Height="13"
+                                                      Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" />
+                                        </Button>
+
+                                        <Button Classes="action-btn del-btn"
+                                                IsVisible="{Binding !IsEditing}"
+                                                ToolTip.Tip="删除任务"
+                                                Command="{Binding #RootTodoView.((vm:TodoViewModel)DataContext).RemoveTaskCommand}"
+                                                CommandParameter="{Binding .}">
+                                            <PathIcon Data="{StaticResource IconTrash}" Width="13" Height="13" Foreground="#FF6B6B" />
+                                        </Button>
+
+                                        <!-- 编辑态按钮: 保存 与 取消 -->
+                                        <Button Classes="action-btn save-btn"
+                                                IsVisible="{Binding IsEditing}"
+                                                ToolTip.Tip="保存修改 (Enter)"
+                                                Command="{Binding CommitEditCommand}">
+                                            <PathIcon Data="{StaticResource IconCheck}" Width="14" Height="14" Foreground="#2ECC71" />
+                                        </Button>
+
+                                        <Button Classes="action-btn cancel-btn"
+                                                IsVisible="{Binding IsEditing}"
+                                                ToolTip.Tip="取消修改 (Esc)"
+                                                Command="{Binding CancelEditCommand}">
+                                            <PathIcon Data="{StaticResource IconClose}" Width="12" Height="12"
+                                                      Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" />
+                                        </Button>
+                                    </StackPanel>
                                 </Grid>
                             </Border>
                         </DataTemplate>

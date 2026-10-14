@@ -110,4 +110,139 @@ public class TodoViewModelTests
         Assert.Single(vm.DisplayTasks);
         Assert.False(vm.DisplayTasks[0].IsCompleted);
     }
+
+    [Fact]
+    public async Task ReorderTask_ShouldMoveItemDownwardsAndPersistOrder()
+    {
+        var storage = new FakeStorageService();
+        var vm = new TodoViewModel(storage);
+        await vm.InitializeAsync();
+
+        // 初始: [0] = Initial 1, [1] = Initial 2
+        var item1 = vm.DisplayTasks[0];
+        var item2 = vm.DisplayTasks[1];
+
+        // 将 item1 拖拽到 item2 之后
+        vm.ReorderTask(item1, item2, insertAfter: true);
+
+        Assert.Equal(item2, vm.DisplayTasks[0]);
+        Assert.Equal(item1, vm.DisplayTasks[1]);
+        Assert.Equal("Initial 2", vm.DisplayTasks[0].Title);
+        Assert.Equal("Initial 1", vm.DisplayTasks[1].Title);
+    }
+
+    [Fact]
+    public async Task ReorderTask_ShouldMoveItemUpwards()
+    {
+        var storage = new FakeStorageService();
+        var vm = new TodoViewModel(storage);
+        await vm.InitializeAsync();
+
+        // 初始: [0] = Initial 1, [1] = Initial 2
+        var item1 = vm.DisplayTasks[0];
+        var item2 = vm.DisplayTasks[1];
+
+        // 将 item2 拖拽到 item1 之前
+        vm.ReorderTask(item2, item1, insertAfter: false);
+
+        Assert.Equal(item2, vm.DisplayTasks[0]);
+        Assert.Equal(item1, vm.DisplayTasks[1]);
+    }
+
+    [Fact]
+    public async Task MoveTaskCommands_ShouldReorderItemsCorrectly()
+    {
+        var storage = new FakeStorageService();
+        var vm = new TodoViewModel(storage);
+        await vm.InitializeAsync();
+
+        var item1 = vm.DisplayTasks[0];
+        var item2 = vm.DisplayTasks[1];
+
+        // 下移第一个
+        vm.MoveTaskDownCommand.Execute(item1);
+        Assert.Equal(item2, vm.DisplayTasks[0]);
+        Assert.Equal(item1, vm.DisplayTasks[1]);
+
+        // 上移当前第二个
+        vm.MoveTaskUpCommand.Execute(item1);
+        Assert.Equal(item1, vm.DisplayTasks[0]);
+        Assert.Equal(item2, vm.DisplayTasks[1]);
+    }
+
+    [Fact]
+    public async Task EditTask_Commit_ShouldUpdateTitle()
+    {
+        var storage = new FakeStorageService();
+        var vm = new TodoViewModel(storage);
+        await vm.InitializeAsync();
+
+        var item = vm.DisplayTasks[0];
+        Assert.Equal("Initial 1", item.Title);
+
+        // 启动编辑
+        item.StartEditCommand.Execute(null);
+        Assert.True(item.IsEditing);
+        Assert.Equal("Initial 1", item.EditText);
+
+        // 修改文案并提交
+        item.EditText = "Updated Title from User";
+        item.CommitEditCommand.Execute(null);
+
+        Assert.False(item.IsEditing);
+        Assert.Equal("Updated Title from User", item.Title);
+    }
+
+    [Fact]
+    public async Task EditTask_Cancel_ShouldRevertWithoutChangingTitle()
+    {
+        var storage = new FakeStorageService();
+        var vm = new TodoViewModel(storage);
+        await vm.InitializeAsync();
+
+        var item = vm.DisplayTasks[0];
+        item.StartEditCommand.Execute(null);
+        item.EditText = "This should be discarded";
+
+        item.CancelEditCommand.Execute(null);
+
+        Assert.False(item.IsEditing);
+        Assert.Equal("Initial 1", item.Title);
+    }
+
+    [Fact]
+    public async Task EditTask_BlankText_ShouldNotWipeOriginalTitle()
+    {
+        var storage = new FakeStorageService();
+        var vm = new TodoViewModel(storage);
+        await vm.InitializeAsync();
+
+        var item = vm.DisplayTasks[0];
+        item.StartEditCommand.Execute(null);
+        item.EditText = "   ";
+
+        item.CommitEditCommand.Execute(null);
+
+        Assert.False(item.IsEditing);
+        Assert.Equal("Initial 1", item.Title);
+    }
+
+    [Fact]
+    public async Task EditingOneTask_ShouldAutoCancelOtherTasksEditMode()
+    {
+        var storage = new FakeStorageService();
+        var vm = new TodoViewModel(storage);
+        await vm.InitializeAsync();
+
+        var item1 = vm.DisplayTasks[0];
+        var item2 = vm.DisplayTasks[1];
+
+        item1.StartEditCommand.Execute(null);
+        Assert.True(item1.IsEditing);
+
+        // 编辑第二个时，第一个自动退出编辑态
+        item2.StartEditCommand.Execute(null);
+        Assert.False(item1.IsEditing);
+        Assert.True(item2.IsEditing);
+    }
 }

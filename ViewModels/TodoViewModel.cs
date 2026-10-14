@@ -101,6 +101,7 @@ public partial class TodoViewModel : ViewModelBase
             {
                 var vm = TodoItemViewModel.FromModel(item);
                 vm.StatusChanged += OnItemStatusChanged;
+                vm.EditRequested += OnItemEditRequested;
                 _allTasks.Add(vm);
             }
 
@@ -131,6 +132,7 @@ public partial class TodoViewModel : ViewModelBase
 
         var item = new TodoItemViewModel(NewTaskTitle.Trim());
         item.StatusChanged += OnItemStatusChanged;
+        item.EditRequested += OnItemEditRequested;
         _allTasks.Insert(0, item);
 
         NewTaskTitle = string.Empty;
@@ -147,6 +149,7 @@ public partial class TodoViewModel : ViewModelBase
         if (IsLoading || item == null) return;
 
         item.StatusChanged -= OnItemStatusChanged;
+        item.EditRequested -= OnItemEditRequested;
         _allTasks.Remove(item);
         RefreshFilter();
         TriggerAutoSave();
@@ -177,10 +180,94 @@ public partial class TodoViewModel : ViewModelBase
         foreach (var item in completedList)
         {
             item.StatusChanged -= OnItemStatusChanged;
+            item.EditRequested -= OnItemEditRequested;
             _allTasks.Remove(item);
         }
         RefreshFilter();
         TriggerAutoSave();
+    }
+
+    /// <summary>
+    /// 上移指定任务项
+    /// </summary>
+    [RelayCommand]
+    private void MoveTaskUp(TodoItemViewModel? item)
+    {
+        if (item == null || IsLoading) return;
+        int idx = DisplayTasks.IndexOf(item);
+        if (idx > 0)
+        {
+            ReorderTask(item, DisplayTasks[idx - 1], insertAfter: false);
+        }
+    }
+
+    /// <summary>
+    /// 下移指定任务项
+    /// </summary>
+    [RelayCommand]
+    private void MoveTaskDown(TodoItemViewModel? item)
+    {
+        if (item == null || IsLoading) return;
+        int idx = DisplayTasks.IndexOf(item);
+        if (idx >= 0 && idx < DisplayTasks.Count - 1)
+        {
+            ReorderTask(item, DisplayTasks[idx + 1], insertAfter: true);
+        }
+    }
+
+    /// <summary>
+    /// 拖拽排序核心方法：移动任务项在全量与展示列表中的顺序并触发持久化
+    /// </summary>
+    /// <param name="sourceItem">被拖拽/移动的任务项</param>
+    /// <param name="targetItem">目标位置参考任务项</param>
+    /// <param name="insertAfter">是否插入在目标任务之后（false 则插入在目标前）</param>
+    public void ReorderTask(TodoItemViewModel sourceItem, TodoItemViewModel targetItem, bool insertAfter)
+    {
+        if (IsLoading || sourceItem == null || targetItem == null || ReferenceEquals(sourceItem, targetItem))
+            return;
+
+        int sourceIndexInAll = _allTasks.IndexOf(sourceItem);
+        int targetIndexInAll = _allTasks.IndexOf(targetItem);
+        if (sourceIndexInAll < 0 || targetIndexInAll < 0)
+            return;
+
+        // 1. 调整底层全量数据列表 _allTasks
+        _allTasks.RemoveAt(sourceIndexInAll);
+        targetIndexInAll = _allTasks.IndexOf(targetItem);
+        int newIndexInAll = insertAfter ? targetIndexInAll + 1 : targetIndexInAll;
+        if (newIndexInAll < 0) newIndexInAll = 0;
+        if (newIndexInAll > _allTasks.Count) newIndexInAll = _allTasks.Count;
+        _allTasks.Insert(newIndexInAll, sourceItem);
+
+        // 2. 调整当前展示列表 DisplayTasks（平滑就地调整，避免清空重建引起滚动位置跳跃）
+        int sourceIndexInDisplay = DisplayTasks.IndexOf(sourceItem);
+        int targetIndexInDisplay = DisplayTasks.IndexOf(targetItem);
+        if (sourceIndexInDisplay >= 0 && targetIndexInDisplay >= 0)
+        {
+            DisplayTasks.RemoveAt(sourceIndexInDisplay);
+            targetIndexInDisplay = DisplayTasks.IndexOf(targetItem);
+            int newIndexInDisplay = insertAfter ? targetIndexInDisplay + 1 : targetIndexInDisplay;
+            if (newIndexInDisplay < 0) newIndexInDisplay = 0;
+            if (newIndexInDisplay > DisplayTasks.Count) newIndexInDisplay = DisplayTasks.Count;
+            DisplayTasks.Insert(newIndexInDisplay, sourceItem);
+        }
+        else
+        {
+            RefreshDisplayList();
+        }
+
+        TriggerAutoSave();
+    }
+
+    private void OnItemEditRequested(TodoItemViewModel editingItem)
+    {
+        foreach (var item in _allTasks)
+        {
+            if (item != editingItem && item.IsEditing)
+            {
+                item.CancelEdit();
+            }
+        }
     }
 
     #endregion
